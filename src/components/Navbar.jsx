@@ -7,8 +7,16 @@ import {
   Typography,
   IconButton,
   Tooltip,
+  MenuHandler,
+  Avatar,
+  MenuList,
+  MenuItem,
+  Menu,
 } from "@material-tailwind/react";
 import { useNavigate } from "react-router-dom";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { toastError, toastSuccess } from "../shared/toastHelper";
 
 export default function Navbar() {
   const dispatch = useDispatch();
@@ -20,6 +28,44 @@ export default function Navbar() {
 
   const [open, setOpen] = React.useState(false); //notifications
 
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+  const handleLogout = async () => {
+    const response = await fetch(
+      "https://backend.tec.ampectech.com/api/auth/logout",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
+        },
+      }
+    );
+
+    if (response.ok) {
+      toastSuccess({ message: "Logged out successfully" });
+      // dispatch(setLoggedIn(false));
+      sessionStorage.removeItem("access_token");
+      sessionStorage.removeItem("user");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      navigate("/login");
+    } else {
+      toastError({ message: "Something went wrong" });
+    }
+  };
+  const closeMenu = (label) => {
+    setIsMenuOpen(false);
+    // use a switch statement to handle the different menu items
+    switch (label) {
+      case "Logout":
+        handleLogout();
+        break;
+      case `${user?.name}`:
+        navigate("/profile");
+      default:
+        break;
+    }
+  };
   useEffect(() => {
     const userData = sessionStorage.getItem("user");
     if (userData) {
@@ -81,13 +127,16 @@ export default function Navbar() {
   };
 
   const handleReject = async (id) => {
-    const response = await fetch(`http://backend.tec.ampectech.com/api/notification/${id}`, {
-      method: "DELETE",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
-      },
-    });
+    const response = await fetch(
+      `http://backend.tec.ampectech.com/api/notification/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
+        },
+      }
+    );
     const data = await response.json();
     fetchAdminNotification();
     console.log(data);
@@ -95,14 +144,17 @@ export default function Navbar() {
 
   const handleView = async (notif) => {
     try {
-      const response = await fetch(`http://backend.tec.ampectech.com/api/jobsheets/${notif.data.job_sheets_id}`, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
-        },
-      });
-  
+      const response = await fetch(
+        `http://backend.tec.ampectech.com/api/jobsheets/${notif.data.job_sheets_id}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
+          },
+        }
+      );
+
       // Check if response status is ok
       if (response.ok) {
         const data = await response.json();
@@ -117,7 +169,18 @@ export default function Navbar() {
       console.error("Error fetching data:", error);
       // Optionally, you can handle this error case
     }
-  };  
+  };
+
+  const profileMenuItems = [
+    {
+      label: `${user?.name}`,
+      icon: AccountCircleIcon,
+    },
+    {
+      label: "Logout",
+      icon: LogoutIcon,
+    },
+  ];
 
   // notification related functionality
   const openDrawer = () => setOpen(true);
@@ -235,7 +298,10 @@ export default function Navbar() {
           ) : (
             <div className="mb-4">
               {notification?.map((notif, index) => (
-                <div key={index} className="flex items-center justify-between font-sm">
+                <div
+                  key={index}
+                  className="flex items-center justify-between font-sm"
+                >
                   <p>
                     This Job Id {notif.data?.job_sheets_id} is approved to edit.
                   </p>
@@ -265,7 +331,51 @@ export default function Navbar() {
           <Button size="sm">See All Notifications</Button>
         </Drawer>
       </React.Fragment>
-      <p>{user?.name}</p>
+      <div>
+        <Menu open={isMenuOpen} handler={setIsMenuOpen} placement="bottom-end">
+          <MenuHandler>
+            <Button
+              variant="text"
+              color="blue-gray"
+              className="flex items-center gap-1 rounded-full py-0.5 pr-0 pl-0.5 lg:ml-auto"
+            >
+              <AccountCircleIcon
+                fontSize="large"
+                className="border-[1px] rounded-full"
+              />
+            </Button>
+          </MenuHandler>
+          <MenuList className="p-1">
+            {profileMenuItems.map(({ label, icon }, key) => {
+              const isLastItem = key === profileMenuItems.length - 1;
+              return (
+                <MenuItem
+                  key={label}
+                  onClick={() => closeMenu(label)}
+                  className={`flex items-center gap-2 rounded ${
+                    isLastItem
+                      ? "hover:bg-red-500/10 focus:bg-red-500/10 active:bg-red-500/10"
+                      : ""
+                  }`}
+                >
+                  {React.createElement(icon, {
+                    className: `h-4 w-4 ${isLastItem ? "text-red-500" : ""}`,
+                    strokeWidth: 2,
+                  })}
+                  <Typography
+                    as="span"
+                    variant="small"
+                    className="font-normal"
+                    color={isLastItem ? "red" : "inherit"}
+                  >
+                    {label}
+                  </Typography>
+                </MenuItem>
+              );
+            })}
+          </MenuList>
+        </Menu>
+      </div>
     </div>
   );
 }

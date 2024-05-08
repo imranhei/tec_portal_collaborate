@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { toastError } from "../shared/toastHelper";
 // import { useDispatch, useSelector } from "react-redux";
 // import { setLoggedIn } from "../redux/auth";
 
-export default function Sidebar( {open} ) {
+export default function Sidebar({ open }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -35,12 +36,16 @@ export default function Sidebar( {open} ) {
       localStorage.removeItem("refresh_token");
       navigate("/login");
     } else {
-      alert("Something went wrong");
+      toastError({ message: "Failed to logout" });
     }
   };
 
   return (
-    <div className={`h-full p-4 md:px-4 ${open ? "" : "px-12"} border-r flex flex-col relative`}>
+    <div
+      className={`h-full p-4 md:px-4 ${
+        open ? "" : "px-12"
+      } border-r flex flex-col relative`}
+    >
       <img src="/tec_logo.png" alt="" className="w-24 mx-auto pb-4" />
       {(user?.role === "Super Admin" || user?.role === "Admin") && (
         <>

@@ -13,6 +13,7 @@ import PrivateUserRoute from "./components/PrivateUserRoute";
 import JobSheet from "./components/JobSheet";
 import JobSheets from "./components/JobSheets";
 import Navbar from "./components/Navbar";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   const navigate = useNavigate();
@@ -125,6 +126,7 @@ function App() {
           </Route>
         </Routes>
       </div>
+      <Toaster toastOptions={{ duration: 3000 }} />
     </div>
   );
 }
