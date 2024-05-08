@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { setNotification } from "../redux/notifications";
 import {
   Drawer,
   Button,
@@ -8,7 +7,6 @@ import {
   IconButton,
   Tooltip,
   MenuHandler,
-  Avatar,
   MenuList,
   MenuItem,
   Menu,
@@ -16,7 +14,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
+
+import { setNotification } from "../redux/notifications";
 import { toastError, toastSuccess } from "../shared/toastHelper";
+import { API_CALL_INTERVAL } from "../common/constant";
 
 export default function Navbar() {
   const dispatch = useDispatch();
@@ -74,17 +75,15 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    if (user?.role === "Admin" || user?.role === "Super Admin") {
-      fetchAdminNotification();
-    } else {
-      fetchUserNotification();
-    }
-  }, [user]);
+    fetchUserNotification();
+    const intervalId = setInterval(fetchUserNotification, API_CALL_INTERVAL);
+    return () => clearInterval(intervalId);
+  }, []);
 
-  const fetchAdminNotification = async () => {
+  const fetchUserNotification = async () => {
     // fetch notification from the server
     const response = await fetch(
-      "http://backend.tec.ampectech.com/api/allunread",
+      "http://backend.tec.ampectech.com/api/notifications",
       {
         headers: {
           Accept: "application/json",
@@ -94,21 +93,6 @@ export default function Navbar() {
     );
     const data = await response.json();
     dispatch(setNotification(data?.notifications));
-  };
-
-  const fetchUserNotification = async () => {
-    // fetch notification from the server
-    const response = await fetch(
-      "http://backend.tec.ampectech.com/api/approvenotifications",
-      {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
-        },
-      }
-    );
-    const data = await response.json();
-    dispatch(setNotification(data?.read_notifications));
   };
 
   const handleApproved = async (id) => {
@@ -123,7 +107,17 @@ export default function Navbar() {
       }
     );
     const data = await response.json();
-    console.log(data);
+    const status = response?.status;
+    if (status === 200) {
+      toastSuccess({ message: "Approved successfully" });
+      fetchUserNotification();
+    } else if (status > 400) {
+      const errorMessage = data?.message;
+      toastError({
+        message: `${errorMessage ? errorMessage : "Something went wrong!"}`,
+      });
+      fetchUserNotification();
+    }
   };
 
   const handleReject = async (id) => {
@@ -138,8 +132,17 @@ export default function Navbar() {
       }
     );
     const data = await response.json();
-    fetchAdminNotification();
-    console.log(data);
+    const status = response?.status;
+    if (status === 200) {
+      fetchUserNotification();
+      toastSuccess({ message: "Rejected successfully" });
+    } else if (status > 400) {
+      const errorMessage = data?.message;
+      toastError({
+        message: `${errorMessage ? errorMessage : "Something went wrong!"}`,
+      });
+      fetchUserNotification();
+    }
   };
 
   const handleView = async (notif) => {
