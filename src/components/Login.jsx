@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toastError } from "../shared/toastHelper";
 // import { useDispatch } from "react-redux";
 // import { setUser } from "../redux/auth";
 
@@ -17,10 +18,13 @@ const Login = () => {
     formData.append("password", password);
 
     try {
-      const response = await fetch("https://backend.tec.ampectech.com/api/auth/login", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "https://backend.tec.ampectech.com/api/auth/login",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
       if (!response.ok) {
         throw new Error("Invalid email or password");
       }
@@ -29,7 +33,7 @@ const Login = () => {
       localStorage.setItem("access_token", data.access_token);
 
       // Token refresh logic
-      if(data?.access_token)await handleTokenRefresh(data.access_token);
+      if (data?.access_token) await handleTokenRefresh(data.access_token);
 
       if (data?.user) {
         sessionStorage.setItem("user", JSON.stringify(data.user));
@@ -40,7 +44,7 @@ const Login = () => {
         }
       }
     } catch (error) {
-      alert(error.message);
+      toastError({ message: error.message });
       console.error("Error:", error);
     }
 
@@ -59,7 +63,7 @@ const Login = () => {
     //         navigate("/current-jobs");
     //       }
     //     } else {
-    //       alert("Invalid email or password");
+    // toastError({ message: "Invalid email or password" });
     //     }
     //   }) // Log parsed JSON data
     //   .catch((error) => console.error("Error:", error)); // Handle any errors
@@ -67,16 +71,19 @@ const Login = () => {
 
   const handleTokenRefresh = async (accessToken) => {
     try {
-      const response = await fetch("https://backend.tec.ampectech.com/api/auth/refresh", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await fetch(
+        "https://backend.tec.ampectech.com/api/auth/refresh",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
       if (!response.ok) {
         throw new Error("Failed to refresh token");
       }
-  
+
       const data = await response.json();
       if (data?.access_token) {
         localStorage.setItem("refresh_token", data.access_token);
