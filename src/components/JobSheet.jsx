@@ -22,10 +22,11 @@ export default function JobSheet() {
   const [textareaHeight, setTextareaHeight] = useState("50px");
   const [textareaHeight2, setTextareaHeight2] = useState("50px");
   const [approved, setApproved] = useState(true);
+  const [updateActivate, setUpdateActivate] = useState(false)
   const [dropDown, setDropDown] = useState({
-    store: ["bondi", "imran"],
-    floor: ["L1", "L2"],
-    location: ["Uttara", "Dhaka"],
+    store: [],
+    floor: [],
+    location: [],
     work_authorised_by: [],
   });
   const handleOpen = (type) => {
@@ -90,6 +91,7 @@ export default function JobSheet() {
       setData(location.state?.row);
       // setEditable(location.state?.row);
       setApproved(location.state?.approved);
+      setUpdateActivate(location.state?.updateActivate)
     }
   }, [location]);
 
@@ -158,6 +160,32 @@ export default function JobSheet() {
     }
   };
 
+  const handleUpdate = async (id) => {
+    try {
+      const response = await fetch(
+        `https://backend.tec.ampectech.com/api/jobsheets/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
+          },
+          body: JSON.stringify(data),
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to update job sheet");
+      }
+      clearForm();
+
+      alert("Job sheet updated successfully");
+    } catch (error) {
+      console.error("Error updating job sheet:", error);
+      alert("Failed to update job sheet");
+    }
+  };
+
   const fetchDropDown = async () => {
     try {
       const response = await fetch(
@@ -208,6 +236,8 @@ export default function JobSheet() {
   };
 
   const clearForm = () => {
+    setUpdateActivate(false)
+    setView(false);
     setData({
       store: "",
       floor: "",
@@ -273,7 +303,6 @@ export default function JobSheet() {
             size="sm"
             onClick={() => {
               navigate("/jobsheet");
-              setView(false);
               clearForm();
             }}
           >
@@ -687,10 +716,10 @@ export default function JobSheet() {
           {!view && (
             <IconButton
               size="sm"
-              onClick={handleSave}
+              onClick={updateActivate ? () => handleUpdate(data.id) : handleSave}
               className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-10 rounded print:hidden"
             >
-              Save
+              {updateActivate ? "Update" : "Save"} 
             </IconButton>
           )}
         </div>

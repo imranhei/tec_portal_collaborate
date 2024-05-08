@@ -106,7 +106,7 @@ export default function Navbar() {
       // Check if response status is ok
       if (response.ok) {
         const data = await response.json();
-        navigate('/jobsheet', { state: { row: data?.data, approved: true} });
+        navigate('/jobsheet', { state: { row: data?.data, approved: true, updateActivate: true } });
       } else {
         // Handle the case where the response is not ok
         console.error("Error fetching data:", response.status);
