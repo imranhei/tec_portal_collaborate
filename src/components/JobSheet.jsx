@@ -10,6 +10,7 @@ import {
 } from "@material-tailwind/react";
 import { useSelector, useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
+import { toastError, toastSuccess } from "../shared/toastHelper";
 
 export default function JobSheet() {
   const navigate = useNavigate();
@@ -150,11 +151,10 @@ export default function JobSheet() {
       }
 
       clearForm();
-
-      alert("Job sheet saved successfully");
+      toastSuccess({ message: "Job sheet saved successfully" });
     } catch (error) {
       console.error("Error saving job sheet:", error);
-      alert("Failed to save job sheet");
+      toastError({ message: "Failed to save job sheet" });
     }
   };
 
@@ -202,7 +202,7 @@ export default function JobSheet() {
       const data = await response.json();
       fetchDropDown();
     } catch (error) {
-      alert(`Failed to add ${field}`);
+      toastError({ message: `Failed to add ${field}` });
     }
     setOpen(!open);
   };
@@ -247,7 +247,7 @@ export default function JobSheet() {
         {
           method: "GET",
           headers: {
-            "Accept": "application/json",
+            Accept: "application/json",
             Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
           },
         }
@@ -255,11 +255,10 @@ export default function JobSheet() {
       if (!response.ok) {
         throw new Error("Failed to request edit");
       }
-
-      alert("Request sent successfully");
+      toastSuccess({ message: "Request sent successfully" });
     } catch (error) {
       console.error("Error requesting edit:", error);
-      alert("Failed to request edit");
+      toastError({ message: "Failed to request edit" });
     }
   };
 

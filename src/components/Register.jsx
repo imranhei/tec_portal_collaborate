@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toastSuccess } from "../shared/toastHelper";
 
 const Register = () => {
   const [username, setUsername] = useState("");
@@ -36,7 +37,7 @@ const Register = () => {
         setEmail("");
         setPassword("");
         setRole("");
-        alert("User registered successfully!");
+        toastSuccess({ message: "User registered successfully" });
       } else {
         throw new Error("Failed to register user");
       }
