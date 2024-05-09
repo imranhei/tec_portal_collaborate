@@ -161,7 +161,9 @@ export default function Navbar() {
       // Check if response status is ok
       if (response.ok) {
         const data = await response.json();
-        navigate('/jobsheet', { state: { row: data?.data, approved: true, updateActivate: true } });
+        navigate("/jobsheet", {
+          state: { row: data?.data, approved: true, updateActivate: true },
+        });
       } else {
         // Handle the case where the response is not ok
         console.error("Error fetching data:", response.status);
@@ -306,11 +308,17 @@ export default function Navbar() {
                   className="flex items-center justify-between font-sm"
                 >
                   <p>
-                    This Job Id {notif.data?.job_sheets_id} is approved to edit.
+                    This Job Id {notif.data?.job_sheets_id} is{" "}
+                    {notif?.read_at ? "approved" : "pending"} to edit.
                   </p>
                   <Tooltip content="View" className="">
                     <button
-                      className="hover:bg-gray-200 rounded-full p-1.5"
+                      disabled={!notif?.read_at}
+                      className={`rounded-full p-1.5 ${
+                        !notif?.read_at
+                          ? "cursor-not-allowed "
+                          : "cursor-pointer hover:bg-gray-200"
+                      }`}
                       onClick={() => handleView(notif)}
                     >
                       <svg
