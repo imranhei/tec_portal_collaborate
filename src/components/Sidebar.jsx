@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toastError } from "../shared/toastHelper";
-// import { useDispatch, useSelector } from "react-redux";
-// import { setLoggedIn } from "../redux/auth";
 
 export default function Sidebar({ open }) {
   const location = useLocation();
@@ -17,32 +15,9 @@ export default function Sidebar({ open }) {
     }
   }, []);
 
-  const handleLogout = async () => {
-    const response = await fetch(
-      "https://backend.tec.ampectech.com/api/auth/logout",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
-        },
-      }
-    );
-
-    if (response.ok) {
-      // dispatch(setLoggedIn(false));
-      sessionStorage.removeItem("access_token");
-      sessionStorage.removeItem("user");
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      navigate("/login");
-    } else {
-      toastError({ message: "Failed to logout" });
-    }
-  };
-
   return (
     <div
-      className={`h-full p-4 md:px-4 ${
+      className={`h-full p-4 pb-2 md:px-4 ${
         open ? "" : "px-12"
       } border-r flex flex-col relative`}
     >
@@ -127,21 +102,13 @@ export default function Sidebar({ open }) {
         </>
       )}
       <Link
-        className={`hover:bg-gray-200 p-2 border-b ${
+        className={`hover:bg-gray-200 mt-auto p-2 pb-0 border-t cursor-pointer ${
           location.pathname === "/profile" ? "font-semibold text-blue-500" : ""
         }`}
         to="/profile"
       >
-        Profile
+        Settings
       </Link>
-      <p
-        className={`hover:bg-gray-200 p-2 border-b cursor-pointer ${
-          location.pathname === "/login" ? "font-semibold text-blue-500" : ""
-        }`}
-        onClick={handleLogout}
-      >
-        Logout
-      </p>
     </div>
   );
 }

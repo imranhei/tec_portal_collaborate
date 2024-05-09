@@ -14,6 +14,8 @@ import JobSheet from "./components/JobSheet";
 import JobSheets from "./components/JobSheets";
 import Navbar from "./components/Navbar";
 import { Toaster } from "react-hot-toast";
+import Security from "./components/Security";
+import Profile from "./components/Profile";
 
 function App() {
   const navigate = useNavigate();
@@ -119,6 +121,8 @@ function App() {
           <Route path="/jobsheets" element={<JobSheets />} />
           {/* <Route path="/jobsheets/view" element={<JobSheet />} /> */}
           <Route path="/jobsheet" element={<JobSheet />} />
+          <Route path="/security" element={<Security />} />
+          <Route path="/profile" element={<Profile />} />
           <Route element={<PrivateUserRoute />}>
             {/* Only users are allowed to view this routes */}
             <Route path="/current-jobs" element={<CurrentJobs />} />
