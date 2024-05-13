@@ -23,7 +23,7 @@ export default function JobSheet() {
   const [textareaHeight, setTextareaHeight] = useState("50px");
   const [textareaHeight2, setTextareaHeight2] = useState("50px");
   const [approved, setApproved] = useState(true);
-  const [updateActivate, setUpdateActivate] = useState(false)
+  const [updateActivate, setUpdateActivate] = useState(false);
   const [dropDown, setDropDown] = useState({
     store: [],
     floor: [],
@@ -92,7 +92,7 @@ export default function JobSheet() {
       setData(location.state?.row);
       // setEditable(location.state?.row);
       setApproved(location.state?.approved);
-      setUpdateActivate(location.state?.updateActivate)
+      setUpdateActivate(location.state?.updateActivate);
     }
   }, [location]);
 
@@ -173,16 +173,15 @@ export default function JobSheet() {
           body: JSON.stringify(data),
         }
       );
-      
+
       if (!response.ok) {
         throw new Error("Failed to update job sheet");
       }
       clearForm();
-
-      alert("Job sheet updated successfully");
+      toastSuccess({ message: "Job sheet updated successfully" });
     } catch (error) {
       console.error("Error updating job sheet:", error);
-      alert("Failed to update job sheet");
+      toastError({ message: "Failed to update job sheet" });
     }
   };
 
@@ -236,7 +235,7 @@ export default function JobSheet() {
   };
 
   const clearForm = () => {
-    setUpdateActivate(false)
+    setUpdateActivate(false);
     setView(false);
     setData({
       store: "",
@@ -715,10 +714,12 @@ export default function JobSheet() {
           {!view && (
             <IconButton
               size="sm"
-              onClick={updateActivate ? () => handleUpdate(data.id) : handleSave}
+              onClick={
+                updateActivate ? () => handleUpdate(data.id) : handleSave
+              }
               className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-10 rounded print:hidden"
             >
-              {updateActivate ? "Update" : "Save"} 
+              {updateActivate ? "Update" : "Save"}
             </IconButton>
           )}
         </div>

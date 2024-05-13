@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { toastError } from "../shared/toastHelper";
 
 export default function Sidebar({ open }) {
   const location = useLocation();
@@ -47,7 +46,17 @@ export default function Sidebar({ open }) {
           </Link>
           <Link
             className={`hover:bg-gray-200 p-2 border-b ${
-              location.pathname.startsWith("/jobsheet")
+              location.pathname === "/jobsheet"
+                ? "font-semibold text-blue-500"
+                : ""
+            }`}
+            to="/jobsheet"
+          >
+            Add Job Sheet
+          </Link>
+          <Link
+            className={`hover:bg-gray-200 p-2 border-b ${
+              location?.pathname === "/jobsheets"
                 ? "font-semibold text-blue-500"
                 : ""
             }`}
