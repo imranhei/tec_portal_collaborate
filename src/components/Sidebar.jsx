@@ -74,6 +74,16 @@ export default function Sidebar({ open }) {
           >
             Register
           </Link>
+          <Link
+            className={`hover:bg-gray-200 p-2 border-b ${
+              location.pathname === "/timesheet"
+                ? "font-semibold text-blue-500"
+                : ""
+            }`}
+            to="/timesheet"
+          >
+            Time Sheet
+          </Link>
         </>
       )}
       {user?.role === "Electrician" && (
@@ -97,6 +107,16 @@ export default function Sidebar({ open }) {
             to="/jobsheet"
           >
             Job Sheet
+          </Link>
+          <Link
+            className={`hover:bg-gray-200 p-2 border-b ${
+              location.pathname === "/timesheet"
+                ? "font-semibold text-blue-500"
+                : ""
+            }`}
+            to="/timesheet"
+          >
+            Time Sheet
           </Link>
           <Link
             className={`hover:bg-gray-200 p-2 border-b ${

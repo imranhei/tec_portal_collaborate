@@ -16,6 +16,7 @@ import Navbar from "./components/Navbar";
 import { Toaster } from "react-hot-toast";
 import Security from "./components/Security";
 import Profile from "./components/Profile";
+import TimeSheet from "./components/TimeSheet";
 
 function App() {
   const navigate = useNavigate();
@@ -119,6 +120,7 @@ function App() {
             <Route path="/projects/view" element={<View />} />
           </Route>
           <Route path="/jobsheets" element={<JobSheets />} />
+          <Route path="/timesheet" element={<TimeSheet />} />
           {/* <Route path="/jobsheets/view" element={<JobSheet />} /> */}
           <Route path="/jobsheet" element={<JobSheet />} />
           <Route path="/security" element={<Security />} />
