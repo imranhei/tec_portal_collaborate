@@ -188,7 +188,10 @@ export default function Navbar() {
   ];
 
   // notification related functionality
-  const openDrawer = () => setOpen(true);
+  const openDrawer = () => {
+    fetchUserNotification();
+    setOpen(true);
+  };
   const closeDrawer = () => setOpen(false);
 
   return (
