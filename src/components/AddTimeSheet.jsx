@@ -87,14 +87,11 @@ function AddTimeSheet() {
 
   const normalTimeRowCount = 10;
   const overTimeRowCount = 5;
+
   const printRef = useRef();
+
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
-  });
-
-  const [test, setTest] = useState({
-    employee_name: "",
-    employee_no: "",
   });
 
   return (
@@ -461,27 +458,6 @@ function AddTimeSheet() {
           Submit
         </button>
       </div>
-      <form action="" className="mb-72" onSubmit={handlePrint}>
-        <TextInput
-          type="text"
-          name="textHere"
-          placeholder="Enter text"
-          value={test.employee_name}
-          onChange={(e) => setTest({ ...test, employee_name: e.target.value })}
-          label="Enter Your Email Address"
-          className=""
-        />
-        <TextInput
-          type="text"
-          name="textHere"
-          placeholder="Enter text"
-          value={test.employee_no}
-          onChange={(e) => setTest({ ...test, employee_no: e.target.value })}
-          label="Enter Your Password"
-          className=""
-        />
-        <button type="submit">Submit</button>
-      </form>
     </div>
   );
 }
