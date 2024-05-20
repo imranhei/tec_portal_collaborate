@@ -7,3 +7,12 @@ body {
   padding: 0;
   box-sizing: border-box;
 }
+
+@media print {
+  @page {
+    margin: 50px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+  }
+}

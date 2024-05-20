@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import ButtonLoader from "../shared/ButtonLoader";
@@ -120,6 +120,18 @@ const Login = () => {
       throw error; // Rethrow the error to be caught in the handleLogin function
     }
   };
+
+  useEffect(() => {
+    // check if user is already logged in
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    if (user) {
+      if (user.role === "Super Admin" || user.role === "Admin") {
+        navigate("/projects");
+      } else if (user.role === "Electrician") {
+        navigate("/current-jobs");
+      }
+    }
+  }, [navigate]);
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden">

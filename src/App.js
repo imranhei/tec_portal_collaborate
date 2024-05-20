@@ -16,12 +16,14 @@ import Navbar from "./components/Navbar";
 import { Toaster } from "react-hot-toast";
 import Security from "./components/Security";
 import Profile from "./components/Profile";
+import AddTimeSheet from "./components/AddTimeSheet";
+import PrivateLocalRoutes from "./components/PrivateLocalRoutes";
+import NotFound from "./components/NotFound";
 
 function App() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [worker, setWorker] = useState(null);
 
   function isLoggedIn() {
     const accessToken = sessionStorage.getItem("access_token");
@@ -109,6 +111,7 @@ function App() {
       >
         {/* Render different components based on user role */}
         <Routes>
+          <Route path="*" element={<NotFound />} />
           <Route path="/login" element={<Login />} />
           <Route element={<PrivateAdminRoute />}>
             {/* Only admins are allowed to view this routes */}
@@ -118,11 +121,14 @@ function App() {
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/view" element={<View />} />
           </Route>
-          <Route path="/jobsheets" element={<JobSheets />} />
-          {/* <Route path="/jobsheets/view" element={<JobSheet />} /> */}
-          <Route path="/jobsheet" element={<JobSheet />} />
-          <Route path="/security" element={<Security />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route element={<PrivateLocalRoutes />}>
+            <Route path="/jobsheets" element={<JobSheets />} />
+            <Route path="/addtimesheet" element={<AddTimeSheet />} />
+            {/* <Route path="/jobsheets/view" element={<JobSheet />} /> */}
+            <Route path="/jobsheet" element={<JobSheet />} />
+            <Route path="/security" element={<Security />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
           <Route element={<PrivateUserRoute />}>
             {/* Only users are allowed to view this routes */}
             <Route path="/current-jobs" element={<CurrentJobs />} />

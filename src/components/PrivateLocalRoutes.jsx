@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, Navigate } from "react-router-dom";
 
-const PrivateRoutes = () => {
+const PrivateLocalRoutes = () => {
   // State to hold the user data
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,10 +25,14 @@ const PrivateRoutes = () => {
     // Redirect to login page or another appropriate page
     return <Navigate to="/login" />;
   }
-  // console.log(user?.role)
 
-  // Check if user role is "Admin"
-  return user?.role === "Electrician" ? <Outlet /> : <Navigate to="/login" />;
+  return user?.role === "Super Admin" ||
+    user?.role === "Admin" ||
+    "Electrician" ? (
+    <Outlet />
+  ) : (
+    <Navigate to="/login" />
+  );
 };
 
-export default PrivateRoutes;
+export default PrivateLocalRoutes;
