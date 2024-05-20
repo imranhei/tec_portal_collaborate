@@ -3,6 +3,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import SettingsLayout from "../shared/SettingsLayout";
 import { toastError, toastSuccess } from "../shared/toastHelper";
+import { errorHandler } from "../utilities/errorHandler";
 
 function Security() {
   const [error, setError] = useState("");
@@ -54,6 +55,7 @@ function Security() {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Invalid password");
       }
       clearForm();

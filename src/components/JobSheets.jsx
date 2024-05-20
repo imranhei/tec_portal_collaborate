@@ -30,6 +30,7 @@ import cleaner from "../storage/cleaner";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { errorHandler } from "../utilities/errorHandler";
 // import CreateJobModal from "./modal/CreateJobModal";
 
 const Example = () => {
@@ -151,10 +152,7 @@ const Example = () => {
           },
         });
         if (!response.ok) {
-          if (response.status === 401) {
-            cleaner();
-            navigate("/login");
-          }
+          errorHandler(response);
           throw new Error("Failed to fetch data");
         }
         const data = await response.json();
@@ -611,15 +609,15 @@ const JobSheets = () => (
 
 export default JobSheets;
 
-// const validateRequired = (value) => !!value.length;
+// const validateRequired = (value) => !!value?.length;
 // const validateEmail = (email) =>
-//   !!email.length &&
+//   !!email?.length &&
 //   email
 //     .toLowerCase()
 //     .match(
 //       /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 //     );
-// const validateDate = (date) => !!date.toISOString().length;
+// const validateDate = (date) => !!date.toISOString()?.length;
 
 // function validateUser(user) {
 //   return {

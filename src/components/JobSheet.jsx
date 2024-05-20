@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 
 import { toastError, toastSuccess } from "../shared/toastHelper";
+import { errorHandler } from "../utilities/errorHandler";
 
 export default function JobSheet() {
   const navigate = useNavigate();
@@ -150,6 +151,7 @@ export default function JobSheet() {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to save job sheet");
       }
 
@@ -176,6 +178,7 @@ export default function JobSheet() {
       );
 
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to update job sheet");
       }
       clearForm();
@@ -197,6 +200,7 @@ export default function JobSheet() {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to fetch dropdowns");
       }
 
@@ -224,6 +228,7 @@ export default function JobSheet() {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error(`Failed to add ${field}`);
       }
 
@@ -283,6 +288,7 @@ export default function JobSheet() {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to request edit");
       }
       toastSuccess({ message: "Request sent successfully" });

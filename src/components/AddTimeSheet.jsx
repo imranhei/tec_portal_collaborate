@@ -2,6 +2,8 @@ import React, { useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import TableData from "../shared/TableData";
 import TextInput from "./Input/TextInput";
+import { errorHandler } from "../utilities/errorHandler";
+import { toastError, toastSuccess } from "../shared/toastHelper";
 
 const initialTimeData = [
   {
@@ -58,8 +60,6 @@ const initialData = {
   special_allowances: "",
   signature: "",
   approved: "",
-  revision_count: 0,
-  created_by: "",
 };
 
 function AddTimeSheet() {
@@ -81,8 +81,56 @@ function AddTimeSheet() {
 
   // const [approved, setApproved] = useState(false);
 
-  const handleFormSubmit = () => {
-    console.log(data, normalTime);
+  const clearForm = () => {
+    setData({ ...initialData });
+    setNormalTime([...initialTimeData]);
+    setOverTime([...initialTimeData]);
+    setNormalTimeStartTime({ ...initialStartFinishTime });
+    setNormalTimeFinishTime({ ...initialStartFinishTime });
+    setOverTimeStartTime({ ...initialStartFinishTime });
+    setOverTimeFinishTime({ ...initialStartFinishTime });
+  };
+
+  const handleFormSubmit = async () => {
+    const payload = {
+      ...data,
+      normal_time: [...normalTime],
+      over_time: [...overTime],
+      normal_time_start_time: {
+        ...normalTimeStartTime,
+      },
+      normal_time_finish_time: {
+        ...normalTimeFinishTime,
+      },
+      over_time_start_time: {
+        ...overTimeStartTime,
+      },
+      over_time_finish_time: {
+        ...overTimeFinishTime,
+      },
+    };
+    try {
+      const response = await fetch(
+        "https://backend.tec.ampectech.com/api/time-sheets",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
+          },
+          body: JSON.stringify({ ...payload }),
+        }
+      );
+      if (!response.ok) {
+        errorHandler(response);
+      }
+
+      clearForm();
+      toastSuccess({ message: "Time Sheet Added Successfully" });
+    } catch (error) {
+      console.error("Error saving job sheet:", error);
+      toastError({ message: "Failed to Add Time Sheet" });
+    }
   };
 
   const normalTimeRowCount = 10;

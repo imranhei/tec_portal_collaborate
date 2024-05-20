@@ -26,12 +26,13 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ViewIcon from "@mui/icons-material/Visibility";
 import { useSelector, useDispatch } from "react-redux";
-import { setJobs } from "../redux/currentJobs"; 
+import { setJobs } from "../redux/currentJobs";
 import { useNavigate } from "react-router-dom";
 import cleaner from "../storage/cleaner";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { errorHandler } from "../utilities/errorHandler";
 // import CreateJobModal from "./modal/CreateJobModal";
 
 const Example = () => {
@@ -151,7 +152,7 @@ const Example = () => {
     //   return;
     // }
     setValidationErrors({});
-    if(completedHour !== null) await updateUser(completedHour);
+    if (completedHour !== null) await updateUser(completedHour);
     table.setEditingRow(null); //exit editing mode
   };
 
@@ -187,7 +188,7 @@ const Example = () => {
             sx={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
           >
             <div className="pt-4">
-            {/* <Input
+              {/* <Input
                 label="Job Location"
                 variant="standard"
                 type="text"
@@ -201,9 +202,7 @@ const Example = () => {
                 variant="standard"
                 type="number"
                 defaultValue={completedHour || row.original.completed_hours}
-                onChange={(e) =>
-                  handleCompletedHourChange(e, row)
-                }
+                onChange={(e) => handleCompletedHourChange(e, row)}
                 // error={validationErrors.completed_hours}
                 // helperText={validationErrors.completed_hours}
               />
@@ -256,8 +255,7 @@ function useGetUsers() {
       );
       if (!response.ok) {
         if (response.status === 401) {
-          cleaner();
-          navigate("/login");
+          errorHandler(response);
         }
         throw new Error("Failed to fetch data");
       }
@@ -298,6 +296,7 @@ function useUpdateUser(jobId) {
       );
 
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to update user");
       }
 
@@ -336,7 +335,7 @@ const CurrentJobs = () => (
 
 export default CurrentJobs;
 
-const validateRequired = (value) => !!value.length;
+const validateRequired = (value) => !!value?.length;
 
 function validateUser(user) {
   return {

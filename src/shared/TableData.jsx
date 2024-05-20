@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { toastError } from "./toastHelper";
+import { get } from "lodash";
 
 function TableData({
   arrayCount = 5,
@@ -10,6 +12,61 @@ function TableData({
   finishTime,
   setFinishedTime,
 }) {
+  const [loading, setLoading] = useState(false);
+  const [job_no, setJob_no] = useState("");
+  const [job_name, setJob_name] = useState("");
+  const [index, setIndex] = useState("");
+
+  const findJobSheet = async (job_no) => {
+    try {
+      const response = await fetch(
+        `https://backend.tec.ampectech.com/api/jobsheets/search/${job_no}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
+          },
+        }
+      );
+      if (!response.ok) {
+        toastError({ message: "No job sheet found" });
+      }
+      const data = await response.json();
+      setLoading(false);
+      return data;
+    } catch (error) {
+      toastError({ message: "No job sheet found" });
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (job_no) {
+        setLoading(true);
+        const data = await findJobSheet(job_no);
+        const job_name = get(data, "data.performed", "");
+        setJob_name(job_name);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [job_no, index]);
+
+  useEffect(() => {
+    const updatedData = [...workedHour];
+    updatedData[index] = {
+      ...updatedData[index],
+      job_name: job_name,
+    };
+    setWorkedHour(updatedData);
+
+    setJob_name("");
+    setIndex("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [job_name]);
+
   const grandTotal = (data) => {
     // validate if data is not empty
     if (data) {
@@ -26,6 +83,7 @@ function TableData({
     }
     return 0;
   };
+
   return (
     <div>
       <table className="w-full break-words mt-4">
@@ -82,6 +140,7 @@ function TableData({
             >
               <td className="border border-black">
                 <input
+                  disabled={loading}
                   type="text"
                   className="w-full text-center outline-none"
                   value={workedHour[index]?.job_no || ""}
@@ -92,23 +151,28 @@ function TableData({
                       job_no: e.target.value,
                     };
                     setWorkedHour(updatedData);
+                    setJob_no(e.target.value);
+                    setIndex(index);
                   }}
                 />
               </td>
               <td className="border border-black">
-                <input
-                  type="text"
-                  className="w-full outline-none"
-                  value={workedHour[index]?.job_name || ""}
-                  onChange={(e) => {
-                    const updatedData = [...workedHour];
-                    updatedData[index] = {
-                      ...updatedData[index],
-                      job_name: e.target.value,
-                    };
-                    setWorkedHour(updatedData);
-                  }}
-                />
+                <div>
+                  <input
+                    type="text"
+                    className="w-full outline-none"
+                    value={workedHour[index]?.job_name || ""}
+                    onChange={(e) => {
+                      const updatedData = [...workedHour];
+                      updatedData[index] = {
+                        ...updatedData[index],
+                        job_name: e.target.value,
+                      };
+                      setWorkedHour(updatedData);
+                    }}
+                  />
+                  {}
+                </div>
               </td>
               <td className="border border-black">
                 <input
@@ -240,12 +304,27 @@ function TableData({
                 <input
                   type="number"
                   className="w-full text-center outline-none"
-                  value={grandTotal(workedHour[index]) || ""}
+                  value={
+                    workedHour[index]?.total
+                      ? workedHour[index]?.total
+                      : grandTotal(workedHour[index]) || ""
+                  }
+                  onFocus={() => {
+                    const total = grandTotal(workedHour[index]);
+                    const updatedData = [...workedHour];
+                    updatedData[index] = {
+                      ...updatedData[index],
+                      total: total || 0,
+                    };
+                    setWorkedHour(updatedData);
+                  }}
                   onChange={(e) => {
                     const updatedData = [...workedHour];
                     updatedData[index] = {
                       ...updatedData[index],
-                      total: e.target.value,
+                      total: e.target.value
+                        ? e.target.value
+                        : grandTotal(workedHour[index]) || "",
                     };
                     setWorkedHour(updatedData);
                   }}
@@ -362,7 +441,7 @@ function TableData({
                 className={`${
                   colorGray ? "bg-gray-400 cursor-not-allowed" : ""
                 } w-full text-center outline-none`}
-                value={grandTotal(startTime) || ""}
+                value={startTime?.total || ""}
                 disabled={colorGray}
                 onChange={(e) =>
                   setStartTime({
@@ -482,7 +561,7 @@ function TableData({
                 className={`${
                   colorGray ? "bg-gray-400 cursor-not-allowed" : ""
                 } w-full text-center outline-none`}
-                value={grandTotal(finishTime) || ""}
+                value={finishTime?.total || ""}
                 disabled={colorGray}
                 onChange={(e) =>
                   setFinishedTime({
