@@ -76,13 +76,13 @@ export default function Sidebar({ open }) {
           </Link>
           <Link
             className={`hover:bg-gray-200 p-2 border-b ${
-              location.pathname === "/timesheet"
+              location.pathname === "/addtimesheet"
                 ? "font-semibold text-blue-500"
                 : ""
             }`}
-            to="/timesheet"
+            to="/addtimesheet"
           >
-            Time Sheet
+            Add Time Sheet
           </Link>
         </>
       )}
@@ -110,13 +110,13 @@ export default function Sidebar({ open }) {
           </Link>
           <Link
             className={`hover:bg-gray-200 p-2 border-b ${
-              location.pathname === "/timesheet"
+              location.pathname === "/addtimesheet"
                 ? "font-semibold text-blue-500"
                 : ""
             }`}
-            to="/timesheet"
+            to="/addtimesheet"
           >
-            Time Sheet
+            Add Time Sheet
           </Link>
           <Link
             className={`hover:bg-gray-200 p-2 border-b ${

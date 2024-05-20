@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import TableData from "../shared/TableData";
+import TextInput from "./Input/TextInput";
 
 const initialTimeData = [
   {
@@ -61,7 +62,7 @@ const initialData = {
   created_by: "",
 };
 
-function TimeSheet() {
+function AddTimeSheet() {
   const [data, setData] = useState({ ...initialData });
   const [normalTime, setNormalTime] = useState([...initialTimeData]);
   const [overTime, setOverTime] = useState([...initialTimeData]);
@@ -89,6 +90,11 @@ function TimeSheet() {
   const printRef = useRef();
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
+  });
+
+  const [test, setTest] = useState({
+    employee_name: "",
+    employee_no: "",
   });
 
   return (
@@ -455,8 +461,29 @@ function TimeSheet() {
           Submit
         </button>
       </div>
+      <form action="" className="mb-72" onSubmit={handlePrint}>
+        <TextInput
+          type="text"
+          name="textHere"
+          placeholder="Enter text"
+          value={test.employee_name}
+          onChange={(e) => setTest({ ...test, employee_name: e.target.value })}
+          label="Enter Your Email Address"
+          className=""
+        />
+        <TextInput
+          type="text"
+          name="textHere"
+          placeholder="Enter text"
+          value={test.employee_no}
+          onChange={(e) => setTest({ ...test, employee_no: e.target.value })}
+          label="Enter Your Password"
+          className=""
+        />
+        <button type="submit">Submit</button>
+      </form>
     </div>
   );
 }
 
-export default TimeSheet;
+export default AddTimeSheet;
