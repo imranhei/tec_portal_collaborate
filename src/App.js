@@ -111,7 +111,6 @@ function App() {
       >
         {/* Render different components based on user role */}
         <Routes>
-          <Route path="*" element={<NotFound />} />
           <Route path="/login" element={<Login />} />
           <Route element={<PrivateAdminRoute />}>
             {/* Only admins are allowed to view this routes */}
@@ -134,6 +133,7 @@ function App() {
             <Route path="/current-jobs" element={<CurrentJobs />} />
             <Route path="/history" element={<History />} />
           </Route>
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
       <Toaster toastOptions={{ duration: 3000 }} />
