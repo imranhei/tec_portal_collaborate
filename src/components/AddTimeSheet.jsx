@@ -224,7 +224,7 @@ function AddTimeSheet() {
       return obj;
     };
 
-    const cleanedPayload = removeEmptyItems(payload);
+    //     const cleanedPayload = removeEmptyItems(payload);
 
     const onSuccess = () => {
       clearForm();
