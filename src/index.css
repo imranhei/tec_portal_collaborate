@@ -16,3 +16,38 @@ body {
     box-sizing: border-box;
   }
 }
+
+:root {
+  --primary: #ffffff;
+  --secondary: #ffffff;
+  --default: #efefef;
+  --border: #dedede;
+  --border-top: #dedede1f;
+  --border-bottom: #05050545;
+  --accent: rgba(0, 0, 0, 0.9);
+  --accent-invert: rgba(255, 255, 255, 0.9);
+  --modal-bg: rgba(0, 0, 0, 0.8);
+  --input-error: #ef4444;
+  --secondary-button: #2196f3;
+  --sidebar: #00566f;
+  --sidebar-menu: rgba(255, 255, 255, 0.9);
+  --sidebar-menu-bg: 0, 122, 160;
+  --selected-option-bg: #428bca;
+  --warning: #ff9966;
+  --tab-bg: rgba(255, 255, 255, 0.9);
+  --list-item-border: #eeeeee;
+  --list-item-hover-border: #d3d3d3;
+  --list-item-hover-bg: #f2f8f8;
+  --link-text: #2196f3;
+  --hover-text: #1d4ed8;
+  --yellow: #fcba03;
+  --amber: #d97706;
+  --helper-text: #a0a0a0;
+  --tooltip-text: #e4e4e4;
+  --tooltip-bg: #1a1a1a;
+  --disable-accent: rgba(151, 151, 151);
+  --disable-input-bg: rgba(236, 236, 236);
+  --input-placeholder: rgb(180, 180, 180);
+  --disable-input-placeholder: rgba(208, 208, 208);
+  --scroll-button-bg: #159fd1;
+}

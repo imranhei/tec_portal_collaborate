@@ -1,9 +1,11 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import TableData from "../shared/TableData";
-import TextInput from "./Input/TextInput";
 import { errorHandler } from "../utilities/errorHandler";
 import { toastError, toastSuccess } from "../shared/toastHelper";
+import ApiKit from "../utilities/helper/ApiKit";
+import { useLocation } from "react-router-dom";
+import { get, isEmpty } from "lodash";
 
 const initialTimeData = [
   {
@@ -79,7 +81,72 @@ function AddTimeSheet() {
     ...initialStartFinishTime,
   });
 
-  // const [approved, setApproved] = useState(false);
+  const location = useLocation();
+  const rowData = get(location, "state.row", null);
+  const isView = get(location, "state.view", false);
+
+  useEffect(() => {
+    if (!isEmpty(rowData) && isView) {
+      const {
+        employee_name,
+        employee_no,
+        week_ending,
+        normal_time,
+        over_time,
+        normal_time_start_time,
+        normal_time_finish_time,
+        over_time_start_time,
+        over_time_finish_time,
+        hours_ordinary_time,
+        hours_overtime_1_5,
+        hours_overtime_2,
+        hours_overtime_2_5,
+        hours_night_shift,
+        hours_productivity_allowance,
+        hours_site_allowance,
+        hours_travel_time,
+        hours_rdo,
+        hours_public_holiday,
+        hours_annual_leave,
+        hours_sick_pay,
+        hours_tafe,
+        hours_meals,
+        hours_living_away_from_home_allowance,
+        special_allowances,
+        signature,
+        approved,
+      } = rowData;
+      setData({
+        employee_name,
+        employee_no,
+        week_ending,
+        hours_ordinary_time,
+        hours_overtime_1_5,
+        hours_overtime_2,
+        hours_overtime_2_5,
+        hours_night_shift,
+        hours_productivity_allowance,
+        hours_site_allowance,
+        hours_travel_time,
+        hours_rdo,
+        hours_public_holiday,
+        hours_annual_leave,
+        hours_sick_pay,
+        hours_tafe,
+        hours_meals,
+        hours_living_away_from_home_allowance,
+        special_allowances,
+        signature,
+        approved,
+      });
+      setNormalTime([...normal_time]);
+      setOverTime([...over_time]);
+      setNormalTimeStartTime({ ...normal_time_start_time });
+      setNormalTimeFinishTime({ ...normal_time_finish_time });
+      setOverTimeStartTime({ ...over_time_start_time });
+      setOverTimeFinishTime({ ...over_time_finish_time });
+    }
+  }, [location, rowData, isView]);
 
   const clearForm = () => {
     setData({ ...initialData });
@@ -91,11 +158,46 @@ function AddTimeSheet() {
     setOverTimeFinishTime({ ...initialStartFinishTime });
   };
 
+  const getFormattedNumber = (number) => {
+    return !isNaN(number) ? Number(number) : 0;
+  };
+
+  const calculateTotal = (item) => {
+    let total = 0;
+    if (item) {
+      const { wed, thu, fri, sat, sun, mon, tue } = item;
+      total =
+        getFormattedNumber(wed) +
+        getFormattedNumber(thu) +
+        getFormattedNumber(fri) +
+        getFormattedNumber(sat) +
+        getFormattedNumber(sun) +
+        getFormattedNumber(mon) +
+        getFormattedNumber(tue);
+    }
+    return total;
+  };
+
+  const grandTotal = (array) => {
+    const newArray = [...array];
+    newArray.map((item, index) => {
+      if (item && item.job_no) {
+        item.total = calculateTotal(item);
+      }
+      //       if job_no is empty, remove the item from the array
+      if (!item.job_no) {
+        newArray.splice(index, 1);
+      }
+      return item;
+    });
+    return newArray;
+  };
+
   const handleFormSubmit = async () => {
     const payload = {
       ...data,
-      normal_time: [...normalTime],
-      over_time: [...overTime],
+      normal_time: [...grandTotal(normalTime)],
+      over_time: [...grandTotal(overTime)],
       normal_time_start_time: {
         ...normalTimeStartTime,
       },
@@ -109,28 +211,40 @@ function AddTimeSheet() {
         ...overTimeFinishTime,
       },
     };
-    try {
-      const response = await fetch(
-        "https://backend.tec.ampectech.com/api/time-sheets",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
-          },
-          body: JSON.stringify({ ...payload }),
-        }
-      );
-      if (!response.ok) {
-        errorHandler(response);
-      }
 
+    //     remove empty items from payload
+    const removeEmptyItems = (obj) => {
+      Object.keys(obj).forEach((key) => {
+        if (obj[key] && typeof obj[key] === "object") {
+          removeEmptyItems(obj[key]);
+        } else if (obj[key] === "" || obj[key] === null) {
+          delete obj[key];
+        }
+      });
+      return obj;
+    };
+
+    const cleanedPayload = removeEmptyItems(payload);
+
+    const onSuccess = () => {
       clearForm();
       toastSuccess({ message: "Time Sheet Added Successfully" });
-    } catch (error) {
-      console.error("Error saving job sheet:", error);
+    };
+
+    const onError = (error) => {
+      errorHandler(error);
       toastError({ message: "Failed to Add Time Sheet" });
-    }
+    };
+
+    const onFinally = () => {
+      // setIsLoading(false);
+    };
+
+    ApiKit.timeSheet
+      .postTimeSheets(payload)
+      .then(onSuccess)
+      .catch(onError)
+      .finally(onFinally);
   };
 
   const normalTimeRowCount = 10;
@@ -143,7 +257,7 @@ function AddTimeSheet() {
   });
 
   return (
-    <div className="text-sm">
+    <div className="text-sm p-4">
       <div ref={printRef} className="relative">
         <h1 className="absolute left-20 bg-gray-800 font-extrabold text-4xl text-white font-serif tracking-wider p-1 px-5">
           TEC
@@ -159,6 +273,7 @@ function AddTimeSheet() {
           <div className="flex items-center">
             <p>Employee Name: </p>
             <input
+              disabled={isView}
               type="text"
               value={data?.employee_name || ""}
               list="timeSheet"
@@ -172,6 +287,7 @@ function AddTimeSheet() {
           <div className="flex items-center">
             <p>Employee No: </p>
             <input
+              disabled={isView}
               type="text"
               value={data?.employee_no || ""}
               list="store"
@@ -185,6 +301,7 @@ function AddTimeSheet() {
           <div className="flex items-center">
             <p>Week Ending: </p>
             <input
+              disabled={isView}
               value={data?.week_ending || ""}
               type="date"
               className={`border-b border-dashed w-full border-b-gray-700 outline-none border-spacing-2 focus:border-b-black pl-2 flex-1 bg-white`}
@@ -201,6 +318,7 @@ function AddTimeSheet() {
         </h1>
         {/* normal time table */}
         <TableData
+          isView={isView}
           arrayCount={normalTimeRowCount}
           colorGray={true}
           workedHour={normalTime}
@@ -215,6 +333,7 @@ function AddTimeSheet() {
         </h1>
         {/* over time table */}
         <TableData
+          isView={isView}
           arrayCount={overTimeRowCount}
           colorGray={false}
           workedHour={overTime}
@@ -230,6 +349,7 @@ function AddTimeSheet() {
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_ordinary_time || ""}
                 list="timeSheet"
@@ -245,6 +365,7 @@ function AddTimeSheet() {
             </div>
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_overtime_1_5 || ""}
                 list="timeSheet"
@@ -260,6 +381,7 @@ function AddTimeSheet() {
             </div>
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_overtime_2 || ""}
                 list="timeSheet"
@@ -275,6 +397,7 @@ function AddTimeSheet() {
             </div>
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_overtime_2_5 || ""}
                 list="timeSheet"
@@ -290,6 +413,7 @@ function AddTimeSheet() {
             </div>
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_night_shift || ""}
                 list="timeSheet"
@@ -306,6 +430,7 @@ function AddTimeSheet() {
             </div>
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_productivity_allowance || ""}
                 list="timeSheet"
@@ -324,6 +449,7 @@ function AddTimeSheet() {
             </div>
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_site_allowance || ""}
                 list="timeSheet"
@@ -339,6 +465,7 @@ function AddTimeSheet() {
             </div>
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_travel_time || ""}
                 className="border-2 w-16 outline-none border-black rounded-sm bg-white"
@@ -353,6 +480,7 @@ function AddTimeSheet() {
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_rdo || ""}
                 list="timeSheet"
@@ -366,6 +494,7 @@ function AddTimeSheet() {
             </div>
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_public_holiday || ""}
                 list="timeSheet"
@@ -381,6 +510,7 @@ function AddTimeSheet() {
             </div>
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_annual_leave || ""}
                 className="border-2 w-16 outline-none border-black rounded-sm bg-white"
@@ -395,6 +525,7 @@ function AddTimeSheet() {
             </div>
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_sick_pay || ""}
                 list="timeSheet"
@@ -408,6 +539,7 @@ function AddTimeSheet() {
             </div>
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_tafe || ""}
                 list="timeSheet"
@@ -421,6 +553,7 @@ function AddTimeSheet() {
             </div>
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_meals || ""}
                 list="timeSheet"
@@ -434,6 +567,7 @@ function AddTimeSheet() {
             </div>
             <div className="flex items-center gap-4">
               <input
+                disabled={isView}
                 type="text"
                 value={data?.hours_living_away_from_home_allowance || ""}
                 list="timeSheet"
@@ -471,6 +605,7 @@ function AddTimeSheet() {
           <div className="flex items-center">
             <p className="uppercase">signature: </p>
             <input
+              disabled={isView}
               type="text"
               value={data?.signature || ""}
               list="signature"
@@ -482,6 +617,7 @@ function AddTimeSheet() {
           <div className="flex items-center">
             <p className="uppercase">approved: </p>
             <input
+              disabled={isView}
               type="text"
               value={data?.approved || ""}
               list="approved"
@@ -499,12 +635,14 @@ function AddTimeSheet() {
         >
           Print
         </button>
-        <button
-          className="text-white mt-4 px-6 py-2 rounded-md bg-teal-600"
-          onClick={() => handleFormSubmit()}
-        >
-          Submit
-        </button>
+        {!isView && (
+          <button
+            className="text-white mt-4 px-6 py-2 rounded-md bg-teal-600"
+            onClick={() => handleFormSubmit()}
+          >
+            Submit
+          </button>
+        )}
       </div>
     </div>
   );

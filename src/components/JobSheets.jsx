@@ -1,32 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { Input } from "@material-tailwind/react";
 import {
-  MRT_EditActionButtons,
   MaterialReactTable,
   // createRow,
   useMaterialReactTable,
 } from "material-react-table";
-import {
-  Box,
-  Button,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
+import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import {
   QueryClient,
   QueryClientProvider,
-  useMutation,
   useQuery,
-  useQueryClient,
 } from "@tanstack/react-query";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import ViewIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
-import cleaner from "../storage/cleaner";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -138,7 +124,6 @@ const Example = () => {
     isLoading: isLoadingUsers,
   } = useGetUsers();
   function useGetUsers() {
-    const navigate = useNavigate();
     return useQuery({
       queryKey: ["users", pagination.pageIndex, pagination.pageSize],
       queryFn: async () => {
@@ -401,16 +386,16 @@ const Example = () => {
         </Tooltip> */}
       </Box>
     ),
-    // renderTopToolbarCustomActions: ({ table }) => (
-    //   <Button
-    //     variant="contained"
-    //     onClick={() => {
-    //       table.setCreatingRow(true); //simplest way to open the create row modal with no default values
-    //     }}
-    //   >
-    //     Create New Job
-    //   </Button>
-    // ),
+    renderTopToolbarCustomActions: ({ table }) => (
+      <Button
+        variant="contained"
+        onClick={() => {
+          navigate("/jobsheet", { state: { createActivate: true } });
+        }}
+      >
+        Create New Job
+      </Button>
+    ),
     state: {
       isLoading: isLoadingUsers,
       //   isSaving: isCreatingUser || isUpdatingUser || isDeletingUser,

@@ -33,6 +33,7 @@ import cleaner from "../storage/cleaner";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { errorHandler } from "../utilities/errorHandler";
+import { get } from "lodash";
 // import CreateJobModal from "./modal/CreateJobModal";
 
 const Example = () => {
@@ -158,7 +159,7 @@ const Example = () => {
 
   const table = useMaterialReactTable({
     columns,
-    data: fetchedJobs, //data,
+    data: get(fetchedJobs, "data", []), //data,
     createDisplayMode: "modal", //default ('row', and 'custom' are also available)
     editDisplayMode: "modal", //default ('row', 'cell', 'table', and 'custom' are also available)
     enableEditing: true,
