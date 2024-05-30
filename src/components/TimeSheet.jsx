@@ -7,7 +7,6 @@ import { getFormattedDate } from "../utilities/dateHelper";
 import { LIST_DATA_DATE_FORMAT } from "../common/constant";
 import { BsEyeFill } from "react-icons/bs";
 import { useNavigate } from "react-router-dom";
-import { FaEdit } from "react-icons/fa";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import { Tooltip } from "@mui/material";
 const DISPLAY = {
@@ -22,14 +21,16 @@ const DISPLAY = {
       "signature",
       "approved",
       "status",
+      "revision_count",
       "action",
     ],
     headerClass: {},
     bodyClass: {},
     style: {
-      columnWidth: "md:grid-cols-[0.5fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]", // 1st 1fr for "SL" (if autoSerialNumber true)
+      columnWidth:
+        "md:grid-cols-[0.5fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]", // 1st 1fr for "SL" (if autoSerialNumber true)
       printColumnWidth:
-        "print:grid-cols-[0.5fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]", // 1st 1fr for "SL" (if autoSerialNumber true)
+        "print:grid-cols-[0.5fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]", // 1st 1fr for "SL" (if autoSerialNumber true)
     },
     header: () => {
       return {
@@ -41,6 +42,7 @@ const DISPLAY = {
         signature: "Signature",
         approved: "Approved",
         status: "Status",
+        revision_count: "Revision Count",
         action: "Action",
       };
     },
@@ -77,6 +79,15 @@ const DISPLAY = {
       if (column === "status") {
         const status = get(row, "status", "");
         return status ? status : "-";
+      }
+
+      if (column === "revision_count") {
+        const revisionCount = get(row, "revision_count", 0);
+        return (
+          <span className={`${revisionCount ? "text-linkText" : ""}`}>
+            {revisionCount ? `${revisionCount} time` : "No Revision"}
+          </span>
+        );
       }
 
       if (column === "action") {
@@ -136,21 +147,19 @@ const DISPLAY = {
 };
 function TimeSheet() {
   const [isLoading, setIsLoading] = useState(true);
-  const [productFormData, setProductFormData] = useState({});
+  const [timeSheetData, setTimeSheetData] = useState({});
   const printFunctionRef = useRef(null);
   const currentParamsOfApiCallRef = useRef(null);
 
   const navigate = useNavigate();
 
   const title = DISPLAY.title();
-  const productFormResults = get(productFormData, "data", []);
-  const hasListItems =
-    Array.isArray(productFormResults) && productFormResults.length > 0;
+
   const onChangePharmacy = (data) => {
-    setProductFormData(data);
+    setTimeSheetData(data);
     setIsLoading(false);
   };
-  const callPharmacyApi = (params = "", search = false) => {
+  const callTimeSheetApi = (params = "", search = false) => {
     if (params.key) {
       params = { ...params, keyword: params.key };
       delete params.key;
@@ -174,7 +183,7 @@ function TimeSheet() {
   };
   const init = () => {
     setIsLoading(true);
-    callPharmacyApi();
+    callTimeSheetApi();
   };
   useEffect(() => {
     init();
@@ -199,7 +208,7 @@ function TimeSheet() {
         printFunctionRef={printFunctionRef}
         title={title}
         loading={isLoading}
-        data={productFormData}
+        data={timeSheetData}
         renderDropdownItem={"true"}
         contextMenuData={({ row }) =>
           DISPLAY.content.contextMenu({ row, navigate })
