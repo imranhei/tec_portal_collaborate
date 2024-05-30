@@ -19,6 +19,7 @@ import Profile from "./components/Profile";
 import AddTimeSheet from "./components/AddTimeSheet";
 import PrivateLocalRoutes from "./components/PrivateLocalRoutes";
 import NotFound from "./components/NotFound";
+import TimeSheet from "./components/TimeSheet";
 
 function App() {
   const navigate = useNavigate();
@@ -48,13 +49,50 @@ function App() {
     return <div>Loading...</div>;
   }
 
+  const ToggleSidebar = ({ open }) => {
+    return (
+      <>
+        {open ? (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            className="h-6 w-6"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        ) : (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        )}
+      </>
+    );
+  };
+
   return (
     <div className="flex">
       {isLoggedIn() && (
         <>
           <div
             className={`fixed h-screen overflow-y-auto z-20 bg-white md:left-0 ${
-              open ? "left-0 w-48" : "-left-48 w-60"
+              open ? "left-0 w-48" : "-left-48 w-0"
             } md:w-48 transition-all`}
           >
             <button
@@ -63,36 +101,7 @@ function App() {
               }`}
               onClick={() => setOpen(!open)}
             >
-              {open ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  className="h-6 w-6"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              )}
+              <ToggleSidebar open={open} />
             </button>
             {/* Render Sidebar only if logged in */}
             <Sidebar open={open} />
@@ -100,14 +109,22 @@ function App() {
           <div
             className={`fixed md:h-14 h-10 w-full z-10 flex items-center bg-white shadow`}
           >
+            <button
+              className={`absolute top-2 block md:hidden transition-all z-10 ${
+                open ? "left-4" : "left-4"
+              }`}
+              onClick={() => setOpen(!open)}
+            >
+              <ToggleSidebar open={open} />
+            </button>
             <Navbar />
           </div>
         </>
       )}
       <div
         className={`flex-1 overflow-auto transition-all md:mt-14 mt-10 z-0 ${
-          isLoggedIn() ? "md:ml-48 ml-10" : "ml-0"
-        } p-4 bg-slate-100`}
+          isLoggedIn() ? "md:ml-48" : "ml-0"
+        } bg-slate-100`}
       >
         {/* Render different components based on user role */}
         <Routes>
@@ -123,6 +140,7 @@ function App() {
           <Route element={<PrivateLocalRoutes />}>
             <Route path="/jobsheets" element={<JobSheets />} />
             <Route path="/addtimesheet" element={<AddTimeSheet />} />
+            <Route path="/time-sheet" element={<TimeSheet />} />
             {/* <Route path="/jobsheets/view" element={<JobSheet />} /> */}
             <Route path="/jobsheet" element={<JobSheet />} />
             <Route path="/security" element={<Security />} />

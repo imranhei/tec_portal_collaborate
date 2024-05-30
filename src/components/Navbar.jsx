@@ -18,6 +18,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { setNotification } from "../redux/notifications";
 import { toastError, toastSuccess } from "../shared/toastHelper";
 import { API_CALL_INTERVAL } from "../common/constant";
+import { errorHandler } from "../utilities/errorHandler";
 
 export default function Navbar() {
   const dispatch = useDispatch();
@@ -74,12 +75,6 @@ export default function Navbar() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchUserNotification();
-    const intervalId = setInterval(fetchUserNotification, API_CALL_INTERVAL);
-    return () => clearInterval(intervalId);
-  }, []);
-
   const fetchUserNotification = async () => {
     // fetch notification from the server
     const response = await fetch(
@@ -91,9 +86,19 @@ export default function Navbar() {
         },
       }
     );
+    if (!response.ok) {
+      errorHandler(response);
+    }
     const data = await response.json();
     dispatch(setNotification(data?.notifications));
   };
+
+  useEffect(() => {
+    fetchUserNotification();
+    const intervalId = setInterval(fetchUserNotification, API_CALL_INTERVAL);
+    return () => clearInterval(intervalId);
+    // eslint-disable-next-line
+  }, []);
 
   const handleApproved = async (id) => {
     const response = await fetch(
@@ -157,7 +162,10 @@ export default function Navbar() {
           },
         }
       );
-
+      if (!response.ok) {
+        errorHandler(response);
+        throw new Error("Failed to delete user");
+      }
       // Check if response status is ok
       if (response.ok) {
         const data = await response.json();
@@ -361,7 +369,7 @@ export default function Navbar() {
           </MenuHandler>
           <MenuList className="p-1">
             {profileMenuItems.map(({ label, icon }, key) => {
-              const isLastItem = key === profileMenuItems.length - 1;
+              const isLastItem = key === profileMenuItems?.length - 1;
               return (
                 <MenuItem
                   key={label}

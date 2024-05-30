@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export default function Sidebar({ open }) {
   const location = useLocation();
-  const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
   // Effect to retrieve user data from session storage
@@ -44,19 +43,11 @@ export default function Sidebar({ open }) {
           >
             Employee
           </Link>
+
           <Link
             className={`hover:bg-gray-200 p-2 border-b ${
-              location.pathname === "/jobsheet"
-                ? "font-semibold text-blue-500"
-                : ""
-            }`}
-            to="/jobsheet"
-          >
-            Add Job Sheet
-          </Link>
-          <Link
-            className={`hover:bg-gray-200 p-2 border-b ${
-              location?.pathname === "/jobsheets"
+              location?.pathname === "/jobsheets" ||
+              location?.pathname === "/jobsheet"
                 ? "font-semibold text-blue-500"
                 : ""
             }`}
@@ -76,13 +67,13 @@ export default function Sidebar({ open }) {
           </Link>
           <Link
             className={`hover:bg-gray-200 p-2 border-b ${
-              location.pathname === "/addtimesheet"
+              location.pathname === "/time-sheet"
                 ? "font-semibold text-blue-500"
                 : ""
             }`}
-            to="/addtimesheet"
+            to="/time-sheet"
           >
-            Add Time Sheet
+            Time Sheet
           </Link>
         </>
       )}
@@ -110,13 +101,13 @@ export default function Sidebar({ open }) {
           </Link>
           <Link
             className={`hover:bg-gray-200 p-2 border-b ${
-              location.pathname === "/addtimesheet"
+              location.pathname === "/time-sheet"
                 ? "font-semibold text-blue-500"
                 : ""
             }`}
-            to="/addtimesheet"
+            to="/time-sheet"
           >
-            Add Time Sheet
+            Time Sheet
           </Link>
           <Link
             className={`hover:bg-gray-200 p-2 border-b ${

@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 
 import { toastError, toastSuccess } from "../shared/toastHelper";
+import { errorHandler } from "../utilities/errorHandler";
 
 export default function JobSheet() {
   const navigate = useNavigate();
@@ -150,6 +151,7 @@ export default function JobSheet() {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to save job sheet");
       }
 
@@ -176,6 +178,7 @@ export default function JobSheet() {
       );
 
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to update job sheet");
       }
       clearForm();
@@ -197,6 +200,7 @@ export default function JobSheet() {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to fetch dropdowns");
       }
 
@@ -224,6 +228,7 @@ export default function JobSheet() {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error(`Failed to add ${field}`);
       }
 
@@ -283,6 +288,7 @@ export default function JobSheet() {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to request edit");
       }
       toastSuccess({ message: "Request sent successfully" });
@@ -294,8 +300,8 @@ export default function JobSheet() {
 
   return (
     <div className="space-y-6">
-      {user?.role === "Electrician" && (
-        <div className="w-full flex justify-center px-4 gap-4">
+      <div className="w-full flex justify-center px-4 gap-4">
+        {user?.role === "Electrician" && (
           <Button
             variant="outlined"
             className="hover:bg-black hover:text-white"
@@ -307,16 +313,16 @@ export default function JobSheet() {
           >
             New Job Sheet
           </Button>
-          <Button
-            variant="outlined"
-            className="hover:bg-black hover:text-white"
-            size="sm"
-            onClick={() => navigate("/jobsheets")}
-          >
-            Previous Job Sheet
-          </Button>
-        </div>
-      )}
+        )}
+        <Button
+          variant="outlined"
+          className="hover:bg-black hover:text-white"
+          size="sm"
+          onClick={() => navigate("/jobsheets")}
+        >
+          Previous Job Sheet
+        </Button>
+      </div>
       <div
         className="px-6 py-10 w-[700px] border print:border-none bg-white shadow print:shadow-none mx-auto text-sm"
         ref={componentRef}

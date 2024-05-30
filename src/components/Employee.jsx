@@ -31,6 +31,7 @@ import cleaner from "../storage/cleaner";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { errorHandler } from "../utilities/errorHandler";
 
 const Example = () => {
   const [validationErrors, setValidationErrors] = useState({});
@@ -268,17 +269,12 @@ function useGetUsers() {
         }
       );
       if (!response.ok) {
-        if (response.status === 401) {
-          // Redirect to the login page
-          // dispatch(setLoggedIn(false));
-          cleaner();
-          navigate("/login");
-        }
+        errorHandler(response);
         throw new Error("Failed to fetch data");
       }
       const data = await response.json();
       const userRoles = JSON.parse(sessionStorage.getItem("user")).role;
-  
+
       // Filter out the "Super Admin" role
       const filteredUserData = data.users
         .map((user) => {
@@ -287,7 +283,10 @@ function useGetUsers() {
             newUser.roles = newUser.roles[0];
           }
           return newUser;
-        }).filter((user) => userRoles !== "Admin" || user.roles !== "Super Admin");
+        })
+        .filter(
+          (user) => userRoles !== "Admin" || user.roles !== "Super Admin"
+        );
 
       return filteredUserData;
     },
@@ -334,6 +333,7 @@ function useDeleteUser() {
       );
 
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to delete user");
       }
 
@@ -368,9 +368,9 @@ const EmpDetails = () => (
 
 export default EmpDetails;
 
-const validateRequired = (value) => !!value.length;
+const validateRequired = (value) => !!value?.length;
 const validateEmail = (email) =>
-  !!email.length &&
+  !!email?.length &&
   email
     .toLowerCase()
     .match(

@@ -1,35 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
-import { Input } from "@material-tailwind/react";
 import {
-  MRT_EditActionButtons,
   MaterialReactTable,
   // createRow,
   useMaterialReactTable,
 } from "material-react-table";
-import {
-  Box,
-  Button,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
+import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import {
   QueryClient,
   QueryClientProvider,
-  useMutation,
   useQuery,
-  useQueryClient,
 } from "@tanstack/react-query";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import ViewIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
-import cleaner from "../storage/cleaner";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { errorHandler } from "../utilities/errorHandler";
 // import CreateJobModal from "./modal/CreateJobModal";
 
 const Example = () => {
@@ -137,7 +124,6 @@ const Example = () => {
     isLoading: isLoadingUsers,
   } = useGetUsers();
   function useGetUsers() {
-    const navigate = useNavigate();
     return useQuery({
       queryKey: ["users", pagination.pageIndex, pagination.pageSize],
       queryFn: async () => {
@@ -151,10 +137,7 @@ const Example = () => {
           },
         });
         if (!response.ok) {
-          if (response.status === 401) {
-            cleaner();
-            navigate("/login");
-          }
+          errorHandler(response);
           throw new Error("Failed to fetch data");
         }
         const data = await response.json();
@@ -403,16 +386,16 @@ const Example = () => {
         </Tooltip> */}
       </Box>
     ),
-    // renderTopToolbarCustomActions: ({ table }) => (
-    //   <Button
-    //     variant="contained"
-    //     onClick={() => {
-    //       table.setCreatingRow(true); //simplest way to open the create row modal with no default values
-    //     }}
-    //   >
-    //     Create New Job
-    //   </Button>
-    // ),
+    renderTopToolbarCustomActions: ({ table }) => (
+      <Button
+        variant="contained"
+        onClick={() => {
+          navigate("/jobsheet", { state: { createActivate: true } });
+        }}
+      >
+        Create New Job
+      </Button>
+    ),
     state: {
       isLoading: isLoadingUsers,
       //   isSaving: isCreatingUser || isUpdatingUser || isDeletingUser,
@@ -611,15 +594,15 @@ const JobSheets = () => (
 
 export default JobSheets;
 
-// const validateRequired = (value) => !!value.length;
+// const validateRequired = (value) => !!value?.length;
 // const validateEmail = (email) =>
-//   !!email.length &&
+//   !!email?.length &&
 //   email
 //     .toLowerCase()
 //     .match(
 //       /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 //     );
-// const validateDate = (date) => !!date.toISOString().length;
+// const validateDate = (date) => !!date.toISOString()?.length;
 
 // function validateUser(user) {
 //   return {

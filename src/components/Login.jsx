@@ -17,7 +17,7 @@ const Login = () => {
 
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (email.length < 1) {
+    if (email?.length < 1) {
       setError((prev) => ({ ...prev, email: "Email is required" }));
       return false;
     }
@@ -25,7 +25,7 @@ const Login = () => {
       setError((prev) => ({ ...prev, email: "Invalid email" }));
       return false;
     }
-    if (password.length < 1) {
+    if (password?.length < 1) {
       setError((prev) => ({ ...prev, password: "Password is required" }));
       return false;
     }
