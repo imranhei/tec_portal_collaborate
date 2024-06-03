@@ -1,4 +1,3 @@
-import { get } from "lodash";
 import HttpKit from "./HttpKit";
 
 export const uploadSettings = {
