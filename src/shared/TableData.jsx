@@ -6,12 +6,12 @@ function TableData({
   isView = false,
   arrayCount = 5,
   colorGray = false,
-  workedHour,
-  setWorkedHour,
-  startTime,
-  setStartTime,
-  finishTime,
-  setFinishedTime,
+  workedHour = [],
+  setWorkedHour = () => {},
+  startTime = {},
+  setStartTime = () => {},
+  finishTime = {},
+  setFinishedTime = () => {},
 }) {
   const [loading, setLoading] = useState(false);
   const [job_no, setJob_no] = useState("");

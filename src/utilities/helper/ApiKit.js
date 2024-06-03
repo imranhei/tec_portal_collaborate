@@ -23,6 +23,10 @@ const ApiKit = {
     getTimeSheets: (params) => HttpKit.get("time-sheets", { params }),
     getTimeSheetDetails: (alias, params) =>
       HttpKit.get(`time-sheets/${alias}`, { params }),
+    getTimeSheetHistory: (alias, params) =>
+      HttpKit.get(`time-sheets/${alias}/history`, { params }),
+    updateTimeSheet: (alias, payload) =>
+      HttpKit.put(`time-sheets/${alias}`, payload),
   },
 };
 
