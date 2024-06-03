@@ -1,6 +1,5 @@
-import React, { useRef } from "react";
+import React from "react";
 import { get } from "lodash";
-import { useReactToPrint } from "react-to-print";
 
 import TableData from "../../shared/TableData";
 

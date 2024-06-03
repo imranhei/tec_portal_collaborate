@@ -219,16 +219,16 @@ function AddTimeSheet() {
     };
 
     //     remove empty items from payload
-    const removeEmptyItems = (obj) => {
-      Object.keys(obj).forEach((key) => {
-        if (obj[key] && typeof obj[key] === "object") {
-          removeEmptyItems(obj[key]);
-        } else if (obj[key] === "" || obj[key] === null) {
-          delete obj[key];
-        }
-      });
-      return obj;
-    };
+    //     const removeEmptyItems = (obj) => {
+    //       Object.keys(obj).forEach((key) => {
+    //         if (obj[key] && typeof obj[key] === "object") {
+    //           removeEmptyItems(obj[key]);
+    //         } else if (obj[key] === "" || obj[key] === null) {
+    //           delete obj[key];
+    //         }
+    //       });
+    //       return obj;
+    //     };
 
     //     const cleanedPayload = removeEmptyItems(payload);
 
