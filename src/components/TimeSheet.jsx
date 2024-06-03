@@ -1,14 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
-import List from "../shared/List";
-import { get, isEqual } from "lodash";
-import ApiKit from "../utilities/helper/ApiKit";
-import { MdAdd } from "react-icons/md";
-import { getFormattedDate } from "../utilities/dateHelper";
-import { LIST_DATA_DATE_FORMAT } from "../common/constant";
-import { BsEyeFill } from "react-icons/bs";
 import { useNavigate } from "react-router-dom";
-import { AiOutlineInfoCircle } from "react-icons/ai";
 import { Tooltip } from "@mui/material";
+import { get, isEqual } from "lodash";
+import { FaEdit, FaHistory } from "react-icons/fa";
+import { AiOutlineInfoCircle } from "react-icons/ai";
+import { MdAdd } from "react-icons/md";
+import { BsEyeFill } from "react-icons/bs";
+
+import { toastError } from "../shared/toastHelper";
+import { getFormattedDate } from "../utilities/dateHelper";
+import ApiKit from "../utilities/helper/ApiKit";
+import { LIST_DATA_DATE_FORMAT } from "../common/constant";
+import Modal from "./modal/Modal";
+import List from "../shared/List";
+import TimeSheetHistory from "./History/TimeSheetHistory";
+import ListSkeleton from "../shared/ListSkeleton";
+import { useReactToPrint } from "react-to-print";
+
 const DISPLAY = {
   title: () => "Time Sheet",
   content: {
@@ -46,7 +54,13 @@ const DISPLAY = {
         action: "Action",
       };
     },
-    body: ({ row, column, navigate }) => {
+    body: ({
+      row,
+      column,
+      navigate,
+      onCheckHistory,
+      setIsHistoryModalOpen,
+    }) => {
       if (column === "week_ending") {
         const weekEnding = get(row, "week_ending", "");
         return weekEnding
@@ -84,7 +98,17 @@ const DISPLAY = {
       if (column === "revision_count") {
         const revisionCount = get(row, "revision_count", 0);
         return (
-          <span className={`${revisionCount ? "text-linkText" : ""}`}>
+          <span
+            className={`${
+              revisionCount ? "text-linkText cursor-pointer select-none" : ""
+            }`}
+            onClick={() => {
+              if (revisionCount) {
+                setIsHistoryModalOpen(true);
+                onCheckHistory(get(row, "id", ""));
+              }
+            }}
+          >
             {revisionCount ? `${revisionCount} time` : "No Revision"}
           </span>
         );
@@ -104,16 +128,18 @@ const DISPLAY = {
                 />
               </p>
             </Tooltip>
-            {/* <Tooltip title="Edit">
+            <Tooltip title="Edit">
               <p className="cursor-pointer">
                 <FaEdit
-                  //   onClick={() =>
-                  //     navigate("/addtimesheet", { state: { row, view: false } })
-                  //   }
+                  onClick={() =>
+                    navigate("/addtimesheet", {
+                      state: { row, view: false, edit: true },
+                    })
+                  }
                   size={18}
                 />
               </p>
-            </Tooltip> */}
+            </Tooltip>
           </p>
         );
       }
@@ -127,13 +153,32 @@ const DISPLAY = {
         ? row[column]
         : "-";
     },
-    contextMenu: ({ row, navigate }) => {
+    contextMenu: ({ row, navigate, setIsHistoryModalOpen, onCheckHistory }) => {
+      const revisionCount = get(row, "revision_count", 0);
       return [
         {
           icon: <AiOutlineInfoCircle size={18} />,
           name: "Details",
           function: () =>
             navigate("/addtimesheet", { state: { row, view: true } }),
+        },
+        {
+          icon: <FaHistory size={18} />,
+          name: "Revision History",
+          function: () => {
+            if (revisionCount) {
+              setIsHistoryModalOpen(true);
+              onCheckHistory(get(row, "id", ""));
+            }
+          },
+        },
+        {
+          icon: <FaEdit size={18} />,
+          name: "Edit",
+          function: () =>
+            navigate("/addtimesheet", {
+              state: { row, view: false, edit: true },
+            }),
         },
       ];
     },
@@ -145,11 +190,18 @@ const DISPLAY = {
     ],
   },
 };
+
 function TimeSheet() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [historyData, setHistoryData] = useState({});
   const [timeSheetData, setTimeSheetData] = useState({});
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const printFunctionRef = useRef(null);
   const currentParamsOfApiCallRef = useRef(null);
+
+  const latestHistoryData = get(historyData, "timeSheet", {});
+  const historyDataArray = get(historyData, "history", []);
 
   const navigate = useNavigate();
 
@@ -181,6 +233,39 @@ function TimeSheet() {
     let url = ApiKit.timeSheet.getTimeSheets(params);
     url.then(onSuccess).catch(onError).finally(onFinally);
   };
+
+  const onCheckHistory = (id) => {
+    setIsHistoryLoading(true);
+    const onSuccess = (response) => {
+      const data = get(response, "data", "");
+      setHistoryData(data);
+    };
+    const onError = (error) => {
+      toastError({
+        message: error.message ? error.message : "Something went wrong",
+      });
+    };
+    const onFinally = () => {
+      setIsHistoryLoading(false);
+    };
+    ApiKit.timeSheet
+      .getTimeSheetHistory(id)
+      .then(onSuccess)
+      .catch(onError)
+      .finally(onFinally);
+  };
+
+  const onCloseHistory = () => {
+    setIsHistoryModalOpen(false);
+    setHistoryData({});
+  };
+
+  const printRef = useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+  });
+
   const init = () => {
     setIsLoading(true);
     callTimeSheetApi();
@@ -211,18 +296,72 @@ function TimeSheet() {
         data={timeSheetData}
         renderDropdownItem={"true"}
         contextMenuData={({ row }) =>
-          DISPLAY.content.contextMenu({ row, navigate })
+          DISPLAY.content.contextMenu({
+            row,
+            navigate,
+            setIsHistoryModalOpen,
+            onCheckHistory,
+          })
         }
         onChangeData={onChangePharmacy}
         properties={DISPLAY.content.properties}
         header={DISPLAY.content.header()}
         body={({ row, column }) =>
-          DISPLAY.content.body({ row, column, navigate })
+          DISPLAY.content.body({
+            row,
+            column,
+            navigate,
+            onCheckHistory,
+            setIsHistoryModalOpen,
+          })
         }
         style={DISPLAY.content.style}
         customColumnClassNames={DISPLAY.content.customColumnClassNames}
         callApi={init}
       />
+      <Modal
+        isOpen={isHistoryModalOpen}
+        onClose={onCloseHistory}
+        title="Time Sheet History"
+        size="xxl"
+      >
+        <div className="flex flex-col gap-4">
+          {isHistoryLoading ? (
+            <>
+              <ListSkeleton rows={20} />
+            </>
+          ) : (
+            <div ref={printRef}>
+              <div className="flex justify-between gap-4">
+                <p className="text-xl font-bold bg-teal-400 rounded-md px-2 w-fit">
+                  Latest Revision
+                </p>
+                <p
+                  className="text-xl font-bold print:hidden bg-teal-400 hover:bg-teal-500 rounded-md px-2 w-fit cursor-pointer"
+                  onClick={handlePrint}
+                >
+                  Print
+                </p>
+              </div>
+              <div className="">
+                <div className="print:break-after-page">
+                  <TimeSheetHistory data={latestHistoryData} isView={true} />
+                </div>
+                {Array.isArray(historyDataArray) &&
+                  historyDataArray?.map((history, index) => (
+                    <div className="print:break-after-page" key={index}>
+                      <hr className="print:hidden" />
+                      <h1 className="text-xl font-bold bg-teal-400 rounded-lg px-2 w-fit mt-1">
+                        Revision Count: {index + 1}
+                      </h1>
+                      <TimeSheetHistory data={history} isView={true} />
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }
