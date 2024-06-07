@@ -13,3 +13,5 @@ export const LIST_DATA_DATE_FORMAT = "dd-MM-yyyy";
 export const DETAILS_PAGE_FOOTER_DATETIME_FORMAT = "dd-MMM-yyyy', 'hh:mm:ss a";
 export const TIME_FORMAT = "hh:mm a";
 export const LIST_DATA_DATETIME_FORMAT = "dd-MM-yyyy' 'hh:mm a";
+export const SELECT = "select";
+export const ASYNC_SELECT = "async";

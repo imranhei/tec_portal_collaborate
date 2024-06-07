@@ -90,6 +90,125 @@ function AddTimeSheet() {
   const isView = get(location, "state.view", false);
   const isEdit = get(location, "state.edit", false);
 
+  const clearForm = () => {
+    setData({ ...initialData });
+    setNormalTime([...initialTimeData]);
+    setOverTime([...initialTimeData]);
+    setNormalTimeStartTime({ ...initialStartFinishTime });
+    setNormalTimeFinishTime({ ...initialStartFinishTime });
+    setOverTimeStartTime({ ...initialStartFinishTime });
+    setOverTimeFinishTime({ ...initialStartFinishTime });
+  };
+
+  const getFormattedNumber = (number) => {
+    return !isNaN(number) ? Number(number) : 0;
+  };
+
+  const calculateTotal = (item) => {
+    let total = 0;
+    if (item) {
+      const { wed, thu, fri, sat, sun, mon, tue } = item;
+      total =
+        getFormattedNumber(wed) +
+        getFormattedNumber(thu) +
+        getFormattedNumber(fri) +
+        getFormattedNumber(sat) +
+        getFormattedNumber(sun) +
+        getFormattedNumber(mon) +
+        getFormattedNumber(tue);
+    }
+    return total;
+  };
+
+  const grandTotal = (array) => {
+    const newArray = [...array];
+    newArray.map((item, index) => {
+      if (item && item.job_no) {
+        item.total = calculateTotal(item);
+      }
+      //       if job_no is empty, remove the item from the array
+      if (!item.job_no) {
+        newArray.splice(index, 1);
+      }
+      return item;
+    });
+    return newArray;
+  };
+
+  const handleFormSubmit = async () => {
+    setIsSubmitting(true);
+    const payload = {
+      ...data,
+      employee_no: `${data.employee_no}`,
+      normal_time: [...grandTotal(normalTime)],
+      over_time: [...grandTotal(overTime)],
+      normal_time_start_time: {
+        ...normalTimeStartTime,
+      },
+      normal_time_finish_time: {
+        ...normalTimeFinishTime,
+      },
+      over_time_start_time: {
+        ...overTimeStartTime,
+      },
+      over_time_finish_time: {
+        ...overTimeFinishTime,
+      },
+    };
+
+    //     remove empty items from payload
+    //     const removeEmptyItems = (obj) => {
+    //       Object.keys(obj).forEach((key) => {
+    //         if (obj[key] && typeof obj[key] === "object") {
+    //           removeEmptyItems(obj[key]);
+    //         } else if (obj[key] === "" || obj[key] === null) {
+    //           delete obj[key];
+    //         }
+    //       });
+    //       return obj;
+    //     };
+
+    //     const cleanedPayload = removeEmptyItems(payload);
+
+    const onSuccess = () => {
+      clearForm();
+      toastSuccess({ message: "Time Sheet Added Successfully" });
+    };
+
+    const onError = (error) => {
+      errorHandler(error);
+      toastError({ message: "Failed to Add Time Sheet" });
+    };
+
+    const onFinally = () => {
+      setIsSubmitting(false);
+    };
+
+    if (
+      payload?.employee_no === "" ||
+      payload?.employee_name === "" ||
+      payload?.week_ending === ""
+    ) {
+      toastError({ message: "Please fill all the required fields" });
+      setIsSubmitting(false);
+      return;
+    }
+    const url = isEdit
+      ? ApiKit.timeSheet.updateTimeSheet(alias, { ...payload })
+      : ApiKit.timeSheet.postTimeSheets(payload);
+
+    url.then(onSuccess).catch(onError).finally(onFinally);
+  };
+
+  const normalTimeRowCount = 10;
+  const overTimeRowCount = 5;
+
+  const printRef = useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+  });
+
   useEffect(() => {
     if (!isEmpty(rowData) && (isView || isEdit)) {
       const {
@@ -153,114 +272,17 @@ function AddTimeSheet() {
     }
   }, [location, rowData, isView, isEdit]);
 
-  const clearForm = () => {
-    setData({ ...initialData });
-    setNormalTime([...initialTimeData]);
-    setOverTime([...initialTimeData]);
-    setNormalTimeStartTime({ ...initialStartFinishTime });
-    setNormalTimeFinishTime({ ...initialStartFinishTime });
-    setOverTimeStartTime({ ...initialStartFinishTime });
-    setOverTimeFinishTime({ ...initialStartFinishTime });
-  };
-
-  const getFormattedNumber = (number) => {
-    return !isNaN(number) ? Number(number) : 0;
-  };
-
-  const calculateTotal = (item) => {
-    let total = 0;
-    if (item) {
-      const { wed, thu, fri, sat, sun, mon, tue } = item;
-      total =
-        getFormattedNumber(wed) +
-        getFormattedNumber(thu) +
-        getFormattedNumber(fri) +
-        getFormattedNumber(sat) +
-        getFormattedNumber(sun) +
-        getFormattedNumber(mon) +
-        getFormattedNumber(tue);
+  useEffect(() => {
+    const userData = JSON.parse(sessionStorage.getItem("user"));
+    if (userData) {
+      setData({
+        ...data,
+        employee_name: userData?.name,
+        employee_no: userData?.id,
+      });
     }
-    return total;
-  };
-
-  const grandTotal = (array) => {
-    const newArray = [...array];
-    newArray.map((item, index) => {
-      if (item && item.job_no) {
-        item.total = calculateTotal(item);
-      }
-      //       if job_no is empty, remove the item from the array
-      if (!item.job_no) {
-        newArray.splice(index, 1);
-      }
-      return item;
-    });
-    return newArray;
-  };
-
-  const handleFormSubmit = async () => {
-    setIsSubmitting(true);
-    const payload = {
-      ...data,
-      normal_time: [...grandTotal(normalTime)],
-      over_time: [...grandTotal(overTime)],
-      normal_time_start_time: {
-        ...normalTimeStartTime,
-      },
-      normal_time_finish_time: {
-        ...normalTimeFinishTime,
-      },
-      over_time_start_time: {
-        ...overTimeStartTime,
-      },
-      over_time_finish_time: {
-        ...overTimeFinishTime,
-      },
-    };
-
-    //     remove empty items from payload
-    //     const removeEmptyItems = (obj) => {
-    //       Object.keys(obj).forEach((key) => {
-    //         if (obj[key] && typeof obj[key] === "object") {
-    //           removeEmptyItems(obj[key]);
-    //         } else if (obj[key] === "" || obj[key] === null) {
-    //           delete obj[key];
-    //         }
-    //       });
-    //       return obj;
-    //     };
-
-    //     const cleanedPayload = removeEmptyItems(payload);
-
-    const onSuccess = () => {
-      clearForm();
-      toastSuccess({ message: "Time Sheet Added Successfully" });
-    };
-
-    const onError = (error) => {
-      errorHandler(error);
-      toastError({ message: "Failed to Add Time Sheet" });
-    };
-
-    const onFinally = () => {
-      setIsSubmitting(false);
-    };
-
-    const url = isEdit
-      ? ApiKit.timeSheet.updateTimeSheet(alias, { ...payload })
-      : ApiKit.timeSheet.postTimeSheets(payload);
-
-    url.then(onSuccess).catch(onError).finally(onFinally);
-  };
-
-  const normalTimeRowCount = 10;
-  const overTimeRowCount = 5;
-
-  const printRef = useRef();
-
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="text-sm p-4">
@@ -646,8 +668,14 @@ function AddTimeSheet() {
             className="text-white mt-4 px-6 py-2 rounded-md bg-teal-600"
             onClick={() => handleFormSubmit()}
           >
-            <ButtonLoader isLoading={isSubmitting} />
-            {isEdit ? "Update" : "Submit"}
+            <div
+              className={`flex items-center ${
+                isSubmitting ? "justify-evenly" : "justify-center"
+              }`}
+            >
+              <ButtonLoader isLoading={isSubmitting} />
+              {isEdit ? "Update" : "Submit"}
+            </div>
           </button>
         )}
       </div>

@@ -36,9 +36,9 @@ const DISPLAY = {
     bodyClass: {},
     style: {
       columnWidth:
-        "md:grid-cols-[0.5fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]", // 1st 1fr for "SL" (if autoSerialNumber true)
+        "md:grid-cols-[0.5fr_1.5fr_1fr_1.2fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]", // 1st 1fr for "SL" (if autoSerialNumber true)
       printColumnWidth:
-        "print:grid-cols-[0.5fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]", // 1st 1fr for "SL" (if autoSerialNumber true)
+        "print:grid-cols-[0.5fr_1.5fr_1fr_1.2fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]", // 1st 1fr for "SL" (if autoSerialNumber true)
     },
     header: () => {
       return {

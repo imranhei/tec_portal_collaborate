@@ -27,6 +27,18 @@ const ApiKit = {
     updateTimeSheet: (alias, payload) =>
       HttpKit.put(`time-sheets/${alias}`, payload),
   },
+  jobSheet: {
+    getJobSheet: (params) => HttpKit.get(`user/job-sheets`, { params }),
+  },
+  role: {
+    getRoles: (params) => HttpKit.get("roles", { params }),
+  },
+  user: {
+    getUser: (params) => HttpKit.get("users", { params }),
+    updateUser: (alias, payload) => HttpKit.post(`users/${alias}`, payload),
+    deleteUser: (alias) => HttpKit.delete(`users/${alias}`),
+    postUser: (payload) => HttpKit.post("users", payload),
+  },
 };
 
 export default ApiKit;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { toastError } from "./toastHelper";
-import { get } from "lodash";
+import { get, isEmpty } from "lodash";
+import ApiKit from "../utilities/helper/ApiKit";
 
 function TableData({
   isView = false,
@@ -12,48 +12,47 @@ function TableData({
   setStartTime = () => {},
   finishTime = {},
   setFinishedTime = () => {},
+  type = "normal",
 }) {
-  const [loading, setLoading] = useState(false);
-  const [job_no, setJob_no] = useState("");
   const [job_name, setJob_name] = useState("");
   const [index, setIndex] = useState("");
+  const [jobSheetOptions, setJobSheetOptions] = useState([]);
+  const [focusedIndex, setFocusedIndex] = useState({
+    index: null,
+    type: null,
+  });
 
-  const findJobSheet = async (job_no) => {
-    try {
-      const response = await fetch(
-        `https://backend.tec.ampectech.com/api/jobsheets/search/${job_no}`,
-        {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
-          },
-        }
-      );
-      if (!response.ok) {
-        toastError({ message: "No job sheet found" });
-      }
-      const data = await response.json();
-      setLoading(false);
-      return data;
-    } catch (error) {
-      toastError({ message: "No job sheet found" });
-      setLoading(false);
-    }
+  const callJobSheet = (paginate) => {
+    const params = { page: paginate };
+    const onSuccess = (response) => {
+      const data = get(response, "data", {});
+      const options = get(data, "data", []);
+      //       get unique options from the response compare to the previous options
+      const uniqueOptions = options.filter((option) => {
+        return !jobSheetOptions.some((prevOption) => {
+          return prevOption.id === option.id;
+        });
+      });
+      setJobSheetOptions((prevJobSheetOptions) => [
+        ...prevJobSheetOptions,
+        ...uniqueOptions,
+      ]);
+    };
+
+    const onError = (error) => {
+      // errorHelper(error, t);
+    };
+
+    ApiKit.jobSheet
+      .getJobSheet(paginate && params)
+      .then(onSuccess)
+      .catch(onError);
   };
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(async () => {
-      if (job_no) {
-        setLoading(true);
-        const data = await findJobSheet(job_no);
-        const job_name = get(data, "data.performed", "");
-        setJob_name(job_name);
-      }
-    }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [job_no, index]);
+    callJobSheet();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const updatedData = [...workedHour];
@@ -90,6 +89,10 @@ function TableData({
       );
     }
     return 0;
+  };
+
+  const onSelectDropdown = () => {
+    setFocusedIndex({ index: null, type: null });
   };
 
   return (
@@ -149,9 +152,10 @@ function TableData({
               >
                 <td className="border border-black">
                   <input
-                    disabled={loading || isView}
+                    disabled={isView}
+                    onFocus={() => setFocusedIndex({ index, type })}
                     type="text"
-                    className="w-full h-full text-center outline-none"
+                    className="w-full h-full text-center outline-none relative"
                     value={ignoreFloatValue(workedHour[index]?.job_no) || ""}
                     onChange={(e) => {
                       const updatedData = [...workedHour];
@@ -160,12 +164,37 @@ function TableData({
                         job_no: e.target.value,
                       };
                       setWorkedHour(updatedData);
-                      setJob_no(e.target.value);
                       setIndex(index);
+                      onSelectDropdown();
                     }}
                   />
+                  {!isEmpty(jobSheetOptions) &&
+                    focusedIndex.index === index &&
+                    type === focusedIndex.type && (
+                      <div className="flex z-10 absolute cursor-pointer select-none rounded-md text-accent justify-end gap-1 flex-col items-end bg-gray-300 p-2 px-3">
+                        {jobSheetOptions.map((item, indexJ) => (
+                          <div
+                            key={index}
+                            onClick={() => {
+                              const updatedData = [...workedHour];
+                              updatedData[index] = {
+                                ...updatedData[index],
+                                job_no: item?.job_no,
+                                job_name: item?.performed,
+                              };
+                              setWorkedHour(updatedData);
+                              onSelectDropdown();
+                            }}
+                            className={`hover:bg-gray-200 dark:hover:bg-selectedOptionBg cursor-pointer w-full rounded-sm p-1 px-4 text-xs`}
+                          >
+                            {item?.job_no}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                 </td>
-                <td className="border border-black">
+                {/* <div></div> */}
+                <td onClick={onSelectDropdown} className="border border-black">
                   <div>
                     <input
                       disabled={isView}
@@ -186,7 +215,10 @@ function TableData({
                     {}
                   </div>
                 </td>
-                <td className="border border-black w-full h-full flex items-center justify-center">
+                <td
+                  onClick={onSelectDropdown}
+                  className="border border-black w-full h-full flex items-center justify-center"
+                >
                   <input
                     //     disabled={isView}
                     type="checkbox"
@@ -202,7 +234,7 @@ function TableData({
                     }}
                   />
                 </td>
-                <td className="border border-black">
+                <td onClick={onSelectDropdown} className="border border-black">
                   <input
                     disabled={isView}
                     type="number"
@@ -218,7 +250,7 @@ function TableData({
                     }}
                   />
                 </td>
-                <td className="border border-black">
+                <td onClick={onSelectDropdown} className="border border-black">
                   <input
                     disabled={isView}
                     type="number"
@@ -234,7 +266,7 @@ function TableData({
                     }}
                   />
                 </td>
-                <td className="border border-black">
+                <td onClick={onSelectDropdown} className="border border-black">
                   <input
                     disabled={isView}
                     type="number"
@@ -250,14 +282,17 @@ function TableData({
                     }}
                   />
                 </td>
-                <td className={`border border-black`}>
+                <td
+                  onClick={onSelectDropdown}
+                  className={`border border-black`}
+                >
                   <input
                     type="number"
                     className={`${
-                      colorGray ? "bg-gray-400 h-full cursor-not-allowed" : ""
+                      colorGray ? "bg-gray-400 h-full" : ""
                     } w-full h-full text-center outline-none`}
                     value={workedHour[index]?.sat || ""}
-                    disabled={colorGray || isView}
+                    disabled={isView}
                     onChange={(e) => {
                       const updatedData = [...workedHour];
                       updatedData[index] = {
@@ -268,14 +303,17 @@ function TableData({
                     }}
                   />
                 </td>
-                <td className={`border border-black`}>
+                <td
+                  onClick={onSelectDropdown}
+                  className={`border border-black`}
+                >
                   <input
                     type="number"
                     className={`${
-                      colorGray ? "bg-gray-400 h-full cursor-not-allowed" : ""
+                      colorGray ? "bg-gray-400 h-full" : ""
                     } w-full h-full text-center outline-none`}
                     value={workedHour[index]?.sun || ""}
-                    disabled={colorGray || isView}
+                    disabled={isView}
                     onChange={(e) => {
                       const updatedData = [...workedHour];
                       updatedData[index] = {
@@ -286,7 +324,7 @@ function TableData({
                     }}
                   />
                 </td>
-                <td className="border border-black">
+                <td onClick={onSelectDropdown} className="border border-black">
                   <input
                     disabled={isView}
                     type="number"
@@ -302,7 +340,7 @@ function TableData({
                     }}
                   />
                 </td>
-                <td className="border border-black">
+                <td onClick={onSelectDropdown} className="border border-black">
                   <input
                     disabled={isView}
                     type="number"
@@ -318,7 +356,7 @@ function TableData({
                     }}
                   />
                 </td>
-                <td className="border border-black">
+                <td onClick={onSelectDropdown} className="border border-black">
                   <input
                     type="number"
                     disabled
@@ -352,7 +390,10 @@ function TableData({
               </tr>
             );
           })}
-          <tr className="grid grid-cols-[6.7fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1.2fr] border border-black border-y-0 last:border-b">
+          <tr
+            onClick={onSelectDropdown}
+            className="grid grid-cols-[6.7fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1.2fr] border border-black border-y-0 last:border-b"
+          >
             <td className="border border-black">
               <span className="font-bold uppercase flex justify-end pr-4">
                 START TIME:
@@ -477,7 +518,10 @@ function TableData({
               />
             </td>
           </tr>
-          <tr className="grid grid-cols-[6.7fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1.2fr] border border-black border-y-0 last:border-b">
+          <tr
+            onClick={onSelectDropdown}
+            className="grid grid-cols-[6.7fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1.2fr] border border-black border-y-0 last:border-b"
+          >
             <td className="border border-black">
               <span className="font-bold uppercase flex justify-end pr-4">
                 FINISH TIME:

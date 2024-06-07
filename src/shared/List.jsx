@@ -289,13 +289,12 @@ const List = forwardRef((props, ref) => {
 
       const onSuccess = (response) => {
         const _listData = get(response, "data", {});
-        const data = get(response, "data.results", []);
+        const results = get(response, "data.results", []);
         const updatedData = more
           ? mergeableData
-            ? { ..._listData, data: [...mergeableData.data, ...data] }
-            : { ..._listData, data: [...listDataResults, ...data] }
-          : { ..._listData, data: [...data] };
-
+            ? { ..._listData, results: [...mergeableData.results, ...results] }
+            : { ..._listData, results: [...listDataResults, ...results] }
+          : { ..._listData, results: [...results] };
         if (onChangeData) onChangeData({ ...updatedData });
         setIsLoading(false);
       };
