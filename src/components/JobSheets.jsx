@@ -1,45 +1,52 @@
-import { useMemo, useState } from "react";
-import { Input } from "@material-tailwind/react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  MRT_EditActionButtons,
   MaterialReactTable,
   // createRow,
   useMaterialReactTable,
 } from "material-react-table";
-import {
-  Box,
-  Button,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
+import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import {
   QueryClient,
   QueryClientProvider,
-  useMutation,
   useQuery,
-  useQueryClient,
 } from "@tanstack/react-query";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import ViewIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
-import cleaner from "../storage/cleaner";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { errorHandler } from "../utilities/errorHandler";
 // import CreateJobModal from "./modal/CreateJobModal";
 
 const Example = () => {
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
   //   const [validationErrors, setValidationErrors] = useState({});
   const navigate = useNavigate();
   //   const [tempRow, setTempRow] = useState(null);
 
   const handleView = (row) => {
-    navigate("/jobsheet", { state: { row, view:true } });
+    navigate("/jobsheet", { state: { row, view: true } });
   };
+
+  const handleEdit = (row) => {
+    navigate("/jobsheet", {
+      state: { row: row, approved: true, updateActivate: true },
+    });
+  };
+
+  const [user, setUser] = useState(null);
+  const userRole = user?.role;
+
+  useEffect(() => {
+    const userData = sessionStorage.getItem("user");
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
 
   const columns = useMemo(
     () => [
@@ -99,7 +106,7 @@ const Example = () => {
           const formattedDate = `${year}-${month
             .toString()
             .padStart(2, "0")}-${date.toString().padStart(2, "0")}`;
-        return formattedDate
+          return formattedDate;
         },
       },
     ]
@@ -116,6 +123,29 @@ const Example = () => {
     isFetching: isFetchingUsers,
     isLoading: isLoadingUsers,
   } = useGetUsers();
+  function useGetUsers() {
+    return useQuery({
+      queryKey: ["users", pagination.pageIndex, pagination.pageSize],
+      queryFn: async () => {
+        const fetchURL = new URL(
+          "https://backend.tec.ampectech.com/api/user/job-sheets"
+        );
+        fetchURL.searchParams.append("page", pagination.pageIndex + 1);
+        const response = await fetch(fetchURL, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
+          },
+        });
+        if (!response.ok) {
+          errorHandler(response);
+          throw new Error("Failed to fetch data");
+        }
+        const data = await response.json();
+        return data.data;
+      },
+      refetchOnWindowFocus: false,
+    });
+  }
   //call UPDATE hook
   //   const { mutateAsync: updateUser, isPending: isUpdatingUser } =
   //     useUpdateUser();
@@ -173,6 +203,19 @@ const Example = () => {
       sx: {
         minHeight: "500px",
       },
+    },
+    onPaginationChange: setPagination,
+    manualPagination: true,
+    // enable next page call default is true
+    enablePrevPage: true,
+    enableNextPage: true,
+    enablePagination: true,
+    paginationDisplayMode: "pages",
+    muiPaginationProps: {
+      color: "secondary",
+      showRowsPerPage: false,
+      shape: "rounded",
+      variant: "outlined",
     },
     // onCreatingRowCancel: () => setValidationErrors({}),
     // onCreatingRowSave: handleCreateUser,
@@ -328,11 +371,14 @@ const Example = () => {
             <ViewIcon />
           </IconButton>
         </Tooltip>
-        {/* <Tooltip title="Edit">
-          <IconButton onClick={() => table.setEditingRow(row)}>
-            <EditIcon />
-          </IconButton>
-        </Tooltip>
+        {(userRole === "Super Admin" || userRole === "Admin") && (
+          <Tooltip title="Edit">
+            <IconButton onClick={() => handleEdit(row.original)}>
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+        )}
+        {/*
          <Tooltip title="Delete">
           <IconButton color="error" onClick={() => openDeleteConfirmModal(row)}>
             <DeleteIcon />
@@ -340,21 +386,22 @@ const Example = () => {
         </Tooltip> */}
       </Box>
     ),
-    // renderTopToolbarCustomActions: ({ table }) => (
-    //   <Button
-    //     variant="contained"
-    //     onClick={() => {
-    //       table.setCreatingRow(true); //simplest way to open the create row modal with no default values
-    //     }}
-    //   >
-    //     Create New Job
-    //   </Button>
-    // ),
+    renderTopToolbarCustomActions: ({ table }) => (
+      <Button
+        variant="contained"
+        onClick={() => {
+          navigate("/jobsheet", { state: { createActivate: true } });
+        }}
+      >
+        Create New Job
+      </Button>
+    ),
     state: {
       isLoading: isLoadingUsers,
       //   isSaving: isCreatingUser || isUpdatingUser || isDeletingUser,
       //   showAlertBanner: isLoadingUsersError,
       showProgressBars: isFetchingUsers,
+      pagination,
       //   columnVisibility: {
       //     id: false,
       //   },
@@ -420,35 +467,6 @@ const Example = () => {
 //     onSettled: () => queryClient.invalidateQueries({ queryKey: ["users"] }), //refetch users after mutation, disabled for demo
 //   });
 // }
-
-function useGetUsers() {
-  const navigate = useNavigate();
-  return useQuery({
-    queryKey: ["users"],
-    queryFn: async () => {
-      const response = await fetch(
-        "https://backend.tec.ampectech.com/api/user/job-sheets",
-        {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
-          },
-        }
-      );
-      if (!response.ok) {
-        if (response.status === 401) {
-          cleaner();
-          navigate("/login");
-        }
-        throw new Error("Failed to fetch data");
-      }
-      const data = await response.json();
-      return data.data;
-    },
-    refetchOnWindowFocus: false,
-  });
-}
 
 //UPDATE hook (put user in api)
 // function useUpdateUser() {
@@ -576,15 +594,15 @@ const JobSheets = () => (
 
 export default JobSheets;
 
-// const validateRequired = (value) => !!value.length;
+// const validateRequired = (value) => !!value?.length;
 // const validateEmail = (email) =>
-//   !!email.length &&
+//   !!email?.length &&
 //   email
 //     .toLowerCase()
 //     .match(
 //       /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 //     );
-// const validateDate = (date) => !!date.toISOString().length;
+// const validateDate = (date) => !!date.toISOString()?.length;
 
 // function validateUser(user) {
 //   return {

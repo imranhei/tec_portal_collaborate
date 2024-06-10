@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { setNotification } from "../redux/notifications";
 import {
   Drawer,
   Button,
@@ -8,7 +7,6 @@ import {
   IconButton,
   Tooltip,
   MenuHandler,
-  Avatar,
   MenuList,
   MenuItem,
   Menu,
@@ -16,7 +14,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
+
+import { setNotification } from "../redux/notifications";
 import { toastError, toastSuccess } from "../shared/toastHelper";
+import { API_CALL_INTERVAL } from "../common/constant";
+import { errorHandler } from "../utilities/errorHandler";
 
 export default function Navbar() {
   const dispatch = useDispatch();
@@ -73,18 +75,10 @@ export default function Navbar() {
     }
   }, []);
 
-  useEffect(() => {
-    if (user?.role === "Admin" || user?.role === "Super Admin") {
-      fetchAdminNotification();
-    } else {
-      fetchUserNotification();
-    }
-  }, [user]);
-
-  const fetchAdminNotification = async () => {
+  const fetchUserNotification = async () => {
     // fetch notification from the server
     const response = await fetch(
-      "http://backend.tec.ampectech.com/api/allunread",
+      "http://backend.tec.ampectech.com/api/notifications",
       {
         headers: {
           Accept: "application/json",
@@ -92,24 +86,19 @@ export default function Navbar() {
         },
       }
     );
+    if (!response.ok) {
+      errorHandler(response);
+    }
     const data = await response.json();
     dispatch(setNotification(data?.notifications));
   };
 
-  const fetchUserNotification = async () => {
-    // fetch notification from the server
-    const response = await fetch(
-      "http://backend.tec.ampectech.com/api/approvenotifications",
-      {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${localStorage.getItem("refresh_token")}`,
-        },
-      }
-    );
-    const data = await response.json();
-    dispatch(setNotification(data?.read_notifications));
-  };
+  useEffect(() => {
+    fetchUserNotification();
+    const intervalId = setInterval(fetchUserNotification, API_CALL_INTERVAL);
+    return () => clearInterval(intervalId);
+    // eslint-disable-next-line
+  }, []);
 
   const handleApproved = async (id) => {
     const response = await fetch(
@@ -123,7 +112,17 @@ export default function Navbar() {
       }
     );
     const data = await response.json();
-    console.log(data);
+    const status = response?.status;
+    if (status === 200) {
+      toastSuccess({ message: "Approved successfully" });
+      fetchUserNotification();
+    } else if (status > 400) {
+      const errorMessage = data?.message;
+      toastError({
+        message: `${errorMessage ? errorMessage : "Something went wrong!"}`,
+      });
+      fetchUserNotification();
+    }
   };
 
   const handleReject = async (id) => {
@@ -138,8 +137,17 @@ export default function Navbar() {
       }
     );
     const data = await response.json();
-    fetchAdminNotification();
-    console.log(data);
+    const status = response?.status;
+    if (status === 200) {
+      fetchUserNotification();
+      toastSuccess({ message: "Rejected successfully" });
+    } else if (status > 400) {
+      const errorMessage = data?.message;
+      toastError({
+        message: `${errorMessage ? errorMessage : "Something went wrong!"}`,
+      });
+      fetchUserNotification();
+    }
   };
 
   const handleView = async (notif) => {
@@ -154,11 +162,16 @@ export default function Navbar() {
           },
         }
       );
-
+      if (!response.ok) {
+        errorHandler(response);
+        throw new Error("Failed to delete user");
+      }
       // Check if response status is ok
       if (response.ok) {
         const data = await response.json();
-        navigate('/jobsheet', { state: { row: data?.data, approved: true, updateActivate: true } });
+        navigate("/jobsheet", {
+          state: { row: data?.data, approved: true, updateActivate: true },
+        });
       } else {
         // Handle the case where the response is not ok
         console.error("Error fetching data:", response.status);
@@ -183,7 +196,10 @@ export default function Navbar() {
   ];
 
   // notification related functionality
-  const openDrawer = () => setOpen(true);
+  const openDrawer = () => {
+    fetchUserNotification();
+    setOpen(true);
+  };
   const closeDrawer = () => setOpen(false);
 
   return (
@@ -303,11 +319,17 @@ export default function Navbar() {
                   className="flex items-center justify-between font-sm"
                 >
                   <p>
-                    This Job Id {notif.data?.job_sheets_id} is approved to edit.
+                    This Job Id {notif.data?.job_sheets_id} is{" "}
+                    {notif?.read_at ? "approved" : "pending"} to edit.
                   </p>
                   <Tooltip content="View" className="">
                     <button
-                      className="hover:bg-gray-200 rounded-full p-1.5"
+                      disabled={!notif?.read_at}
+                      className={`rounded-full p-1.5 ${
+                        !notif?.read_at
+                          ? "cursor-not-allowed "
+                          : "cursor-pointer hover:bg-gray-200"
+                      }`}
                       onClick={() => handleView(notif)}
                     >
                       <svg
@@ -347,7 +369,7 @@ export default function Navbar() {
           </MenuHandler>
           <MenuList className="p-1">
             {profileMenuItems.map(({ label, icon }, key) => {
-              const isLastItem = key === profileMenuItems.length - 1;
+              const isLastItem = key === profileMenuItems?.length - 1;
               return (
                 <MenuItem
                   key={label}

@@ -1,16 +1,18 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useReactToPrint } from "react-to-print";
 import {
   Button,
-  IconButton,
-  Tooltip,
   Dialog,
   DialogBody,
   DialogFooter,
+  IconButton,
+  Tooltip,
 } from "@material-tailwind/react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useReactToPrint } from "react-to-print";
+
 import { toastError, toastSuccess } from "../shared/toastHelper";
+import { errorHandler } from "../utilities/errorHandler";
 
 export default function JobSheet() {
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ export default function JobSheet() {
   const [textareaHeight, setTextareaHeight] = useState("50px");
   const [textareaHeight2, setTextareaHeight2] = useState("50px");
   const [approved, setApproved] = useState(true);
-  const [updateActivate, setUpdateActivate] = useState(false)
+  const [updateActivate, setUpdateActivate] = useState(false);
   const [dropDown, setDropDown] = useState({
     store: [],
     floor: [],
@@ -92,7 +94,7 @@ export default function JobSheet() {
       setData(location.state?.row);
       // setEditable(location.state?.row);
       setApproved(location.state?.approved);
-      setUpdateActivate(location.state?.updateActivate)
+      setUpdateActivate(location.state?.updateActivate);
     }
   }, [location]);
 
@@ -149,6 +151,7 @@ export default function JobSheet() {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to save job sheet");
       }
 
@@ -173,16 +176,16 @@ export default function JobSheet() {
           body: JSON.stringify(data),
         }
       );
-      
+
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to update job sheet");
       }
       clearForm();
-
-      alert("Job sheet updated successfully");
+      toastSuccess({ message: "Job sheet updated successfully" });
     } catch (error) {
       console.error("Error updating job sheet:", error);
-      alert("Failed to update job sheet");
+      toastError({ message: "Failed to update job sheet" });
     }
   };
 
@@ -197,6 +200,7 @@ export default function JobSheet() {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to fetch dropdowns");
       }
 
@@ -224,6 +228,7 @@ export default function JobSheet() {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error(`Failed to add ${field}`);
       }
 
@@ -236,7 +241,7 @@ export default function JobSheet() {
   };
 
   const clearForm = () => {
-    setUpdateActivate(false)
+    setUpdateActivate(false);
     setView(false);
     setData({
       store: "",
@@ -283,6 +288,7 @@ export default function JobSheet() {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to request edit");
       }
       toastSuccess({ message: "Request sent successfully" });
@@ -294,8 +300,8 @@ export default function JobSheet() {
 
   return (
     <div className="space-y-6">
-      {user?.role === "Electrician" && (
-        <div className="w-full flex justify-center px-4 gap-4">
+      <div className="w-full flex justify-center px-4 gap-4">
+        {user?.role === "Electrician" && (
           <Button
             variant="outlined"
             className="hover:bg-black hover:text-white"
@@ -307,16 +313,16 @@ export default function JobSheet() {
           >
             New Job Sheet
           </Button>
-          <Button
-            variant="outlined"
-            className="hover:bg-black hover:text-white"
-            size="sm"
-            onClick={() => navigate("/jobsheets")}
-          >
-            Previous Job Sheet
-          </Button>
-        </div>
-      )}
+        )}
+        <Button
+          variant="outlined"
+          className="hover:bg-black hover:text-white"
+          size="sm"
+          onClick={() => navigate("/jobsheets")}
+        >
+          Previous Job Sheet
+        </Button>
+      </div>
       <div
         className="px-6 py-10 w-[700px] border print:border-none bg-white shadow print:shadow-none mx-auto text-sm"
         ref={componentRef}
@@ -715,10 +721,12 @@ export default function JobSheet() {
           {!view && (
             <IconButton
               size="sm"
-              onClick={updateActivate ? () => handleUpdate(data.id) : handleSave}
+              onClick={
+                updateActivate ? () => handleUpdate(data.id) : handleSave
+              }
               className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-10 rounded print:hidden"
             >
-              {updateActivate ? "Update" : "Save"} 
+              {updateActivate ? "Update" : "Save"}
             </IconButton>
           )}
         </div>

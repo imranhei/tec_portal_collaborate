@@ -30,6 +30,7 @@ import cleaner from "../storage/cleaner";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { errorHandler } from "../utilities/errorHandler";
 
 const Example = ({ id }) => {
   const [validationErrors, setValidationErrors] = useState({});
@@ -361,10 +362,7 @@ function useCreateUser(id) {
         }
       );
       if (!response.ok) {
-        if (response.status === 401) {
-          cleaner();
-          navigate("/login");
-        }
+        errorHandler(response);
         throw new Error("Failed to fetch data");
       }
       const data = await response.json();
@@ -407,10 +405,7 @@ function useGetUsers(id) {
         }
       );
       if (!response.ok) {
-        if (response.status === 401) {
-          cleaner();
-          navigate("/login");
-        }
+        errorHandler(response);
         throw new Error("Failed to fetch data");
       }
       const data = await response.json();
@@ -439,6 +434,7 @@ function useUpdateUser(id) {
       );
 
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to update user");
       }
 
@@ -483,11 +479,12 @@ function useDeleteUser(id) {
         }
       );
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to delete user");
       }
       // Assuming the response is JSON
       const data = await response.json();
-      console.log(data)
+      console.log(data);
 
       // Return data if needed
       return data;
@@ -498,7 +495,7 @@ function useDeleteUser(id) {
         prevUsers?.filter((user) => user.user_id !== userId)
       );
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['users'] }), //refetch users after mutation, disabled for demo
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["users"] }), //refetch users after mutation, disabled for demo
   });
 }
 
@@ -519,9 +516,9 @@ const EmpDetails = ({ id }) => {
 
 export default EmpDetails;
 
-const validateRequired = (value) => !!value.length;
+const validateRequired = (value) => !!value?.length;
 const validateEmail = (email) =>
-  !!email.length &&
+  !!email?.length &&
   email
     .toLowerCase()
     .match(

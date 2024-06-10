@@ -30,6 +30,8 @@ import cleaner from "../storage/cleaner";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { errorHandler } from "../utilities/errorHandler";
+import { get } from "lodash";
 // import CreateJobModal from "./modal/CreateJobModal";
 
 const Example = () => {
@@ -177,11 +179,11 @@ const Example = () => {
 
   const table = useMaterialReactTable({
     columns,
-    data: fetchedJobs, //data,
+    data: get(fetchedJobs, "data", []), //data,
     createDisplayMode: "modal", //default ('row', and 'custom' are also available)
     editDisplayMode: "modal", //default ('row', 'cell', 'table', and 'custom' are also available)
     enableEditing: true,
-    positionActionsColumn: 'last',
+    positionActionsColumn: "last",
     getRowId: (row) => row.id,
     muiToolbarAlertBannerProps: isLoadingUsersError
       ? {
@@ -209,13 +211,13 @@ const Example = () => {
       //   }));
       // }
       return (
-      <>
-        <DialogTitle variant="h4">Create New Job</DialogTitle>
-        <DialogContent
-          sx={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-        >
-          {internalEditComponents}
-          {/* <div className="flex flex-col py-5 gap-6">
+        <>
+          <DialogTitle variant="h4">Create New Job</DialogTitle>
+          <DialogContent
+            sx={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+          >
+            {internalEditComponents}
+            {/* <div className="flex flex-col py-5 gap-6">
               <Input
                 label="Job Number"
                 variant="static"
@@ -263,12 +265,13 @@ const Example = () => {
                 }
               />
             </div> */}
-        </DialogContent>
-        <DialogActions>
-          <MRT_EditActionButtons variant="text" table={table} row={row} />
-        </DialogActions>
-      </>
-    )},
+          </DialogContent>
+          <DialogActions>
+            <MRT_EditActionButtons variant="text" table={table} row={row} />
+          </DialogActions>
+        </>
+      );
+    },
     //optionally customize modal content
     renderEditRowDialogContent: ({ table, row, internalEditComponents }) => {
       if (tempRow === null) {
@@ -410,9 +413,7 @@ function useCreateUser() {
       );
 
       if (!response.ok) {
-        if (response.status === 401) {
-          console.log("Unauthorized");
-        }
+        errorHandler(response);
         throw new Error("Failed to create user");
       }
 
@@ -456,10 +457,7 @@ function useGetUsers() {
         }
       );
       if (!response.ok) {
-        if (response.status === 401) {
-          cleaner();
-          navigate("/login");
-        }
+        errorHandler(response);
         throw new Error("Failed to fetch data");
       }
       return response.json();
@@ -532,7 +530,9 @@ function useUpdateUser() {
     onMutate: (newUserInfo) => {
       queryClient.setQueryData(["users"], (prevUsers) =>
         prevUsers?.map((prevUser) =>
-          prevUser.job_number === newUserInfo.job_number ? newUserInfo : prevUser
+          prevUser.job_number === newUserInfo.job_number
+            ? newUserInfo
+            : prevUser
         )
       );
     },
@@ -558,6 +558,7 @@ function useDeleteUser() {
       );
 
       if (!response.ok) {
+        errorHandler(response);
         throw new Error("Failed to delete user");
       }
 
@@ -592,15 +593,15 @@ const Projects = () => (
 
 export default Projects;
 
-const validateRequired = (value) => !!value.length;
+const validateRequired = (value) => value?.length;
 // const validateEmail = (email) =>
-//   !!email.length &&
+//   !!email?.length &&
 //   email
 //     .toLowerCase()
 //     .match(
 //       /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 //     );
-// const validateDate = (date) => !!date.toISOString().length;
+// const validateDate = (date) => !!date.toISOString()?.length;
 
 function validateUser(user) {
   return {
