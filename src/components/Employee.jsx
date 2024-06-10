@@ -4,7 +4,7 @@ import { Tooltip } from "@mui/material";
 import { get, isEqual } from "lodash";
 import { FaEdit } from "react-icons/fa";
 import { AiOutlineInfoCircle } from "react-icons/ai";
-import { MdAdd, MdDelete } from "react-icons/md";
+import { MdAdd, MdAssignmentInd, MdDelete, MdPrint } from "react-icons/md";
 import { useReactToPrint } from "react-to-print";
 
 import ApiKit from "../utilities/helper/ApiKit";
@@ -12,6 +12,7 @@ import List from "../shared/List";
 import Modal from "./modal/Modal";
 import RegisterForm from "./Form/RegisterForm";
 import { toastError, toastSuccess } from "../shared/toastHelper";
+import AssignSupervisor from "./modal/AssignSupervisor";
 
 const ContextFunctionList = {
   runDeleteFunction: (row, init) => {
@@ -70,6 +71,7 @@ const DISPLAY = {
       init,
       setEditableData,
       setIsEditModalOpen,
+      setIsAssignSupervisorModalOpen,
     }) => {
       if (column === "id") {
         const id = get(row, "id", "");
@@ -92,6 +94,8 @@ const DISPLAY = {
       }
 
       if (column === "action") {
+        const role = get(row, "roles", []);
+        const isElectrician = role?.includes("Electrician");
         return (
           <div className="flex gap-2">
             <Tooltip title="Edit">
@@ -105,6 +109,19 @@ const DISPLAY = {
                 />
               </p>
             </Tooltip>
+            {isElectrician && (
+              <Tooltip title="Assign Supervisor">
+                <p className="cursor-pointer">
+                  <MdAssignmentInd
+                    onClick={() => {
+                      setEditableData(row);
+                      setIsAssignSupervisorModalOpen(true);
+                    }}
+                    size={18}
+                  />
+                </p>
+              </Tooltip>
+            )}
             {isSuperAdmin && (
               <Tooltip title="Delete">
                 <p>
@@ -137,6 +154,7 @@ const DISPLAY = {
       init,
       setEditableData,
       setIsEditModalOpen,
+      setIsAssignSupervisorModalOpen,
     }) => {
       return [
         {
@@ -150,6 +168,15 @@ const DISPLAY = {
           function: () => {
             setEditableData(row);
             setIsEditModalOpen(true);
+          },
+        },
+        {
+          icon: <MdAssignmentInd size={18} />,
+          name: "Assign Supervisor",
+          display: row.roles.includes("Electrician"),
+          function: () => {
+            setEditableData(row);
+            setIsAssignSupervisorModalOpen(true);
           },
         },
         {
@@ -176,6 +203,8 @@ function Employee() {
   const [userData, setUserData] = useState({});
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAssignSupervisorModalOpen, setIsAssignSupervisorModalOpen] =
+    useState(false);
   const [editableData, setEditableData] = useState({});
 
   const printRef = useRef();
@@ -222,6 +251,7 @@ function Employee() {
   const onCloseHistory = () => {
     setIsUserModalOpen(false);
     setIsEditModalOpen(false);
+    setIsAssignSupervisorModalOpen(false);
   };
 
   const handlePrint = useReactToPrint({
@@ -238,16 +268,24 @@ function Employee() {
   }, []);
 
   return (
-    <div>
-      <div className="print:static flex flex-col md:flex-row gap-4 justify-between top-16 px-4 print:px-0 py-4 border-y border-borderColor drop-shadow-md font-bold text-2xl uppercase print:capitalize text-left bg-default text-accent print:grid print:gap-x-3 print:bg-white print:font-bold print:border-b-2 print:border-t-2 print:py-1 print:my-2 print:border-y-0 print:border-b-black print:border-t-black print:drop-shadow-none print:text-black">
+    <div className="border-t-0" ref={printRef}>
+      <div className="print:static flex flex-col md:flex-row gap-4 justify-between top-16 px-4 print:px-0 py-4 border-y print:border-t-0 border-borderColor drop-shadow-md font-bold text-2xl uppercase print:capitalize text-left bg-default text-accent print:grid print:gap-x-3 print:bg-white print:font-bold print:border-b-2 print:py-1 print:my-2 print:border-y-0 print:border-b-black print:border-t-black print:drop-shadow-none print:text-black">
         {title ? title : ""}
         <div className="flex flex-col md:flex-row gap-4">
-          <Tooltip title="Add User">
+          <Tooltip title="Add Employee">
             <button
               onClick={() => setIsUserModalOpen(true)}
-              className="print:hidden bg-blue-600 p-1 rounded-full hover:bg-linkText text-white"
+              className="print:hidden bg-blue-600 p-1 w-8 h-8 flex justify-center items-center rounded-full hover:bg-linkText text-white hover:text-amber"
             >
-              <MdAdd size={28} />
+              <MdAdd size={20} />
+            </button>
+          </Tooltip>
+          <Tooltip title="Print">
+            <button
+              onClick={handlePrint}
+              className="print:hidden bg-blue-600 p-1 w-8 h-8 flex justify-center items-center rounded-full hover:bg-linkText text-white hover:text-amber"
+            >
+              <MdPrint size={20} />
             </button>
           </Tooltip>
         </div>
@@ -265,6 +303,7 @@ function Employee() {
             init,
             setEditableData,
             setIsEditModalOpen,
+            setIsAssignSupervisorModalOpen,
           })
         }
         onChangeData={onChangeUserData}
@@ -278,6 +317,7 @@ function Employee() {
             init,
             setEditableData,
             setIsEditModalOpen,
+            setIsAssignSupervisorModalOpen,
           })
         }
         style={DISPLAY.content.style}
@@ -299,6 +339,18 @@ function Employee() {
         size="sm"
       >
         <RegisterForm type="edit" init={init} data={editableData} />
+      </Modal>
+      <Modal
+        isOpen={isAssignSupervisorModalOpen}
+        onClose={onCloseHistory}
+        title="Assign Supervisor"
+        size="sm"
+      >
+        <AssignSupervisor
+          onClose={onCloseHistory}
+          init={init}
+          data={editableData}
+        />
       </Modal>
     </div>
   );

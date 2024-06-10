@@ -12,6 +12,7 @@ import React, {
   useState,
 } from "react";
 import isEqual from "react-fast-compare";
+import { FaSort } from "react-icons/fa";
 import { useReactToPrint } from "react-to-print";
 
 import { useScrollDirection } from "../hooks/useScrollDirection";
@@ -421,6 +422,11 @@ const List = forwardRef((props, ref) => {
                 }`}
               >
                 {header[propertyKey]}
+                {/* <div className="flex items-center gap-1 select-none">
+                  <div className="cursor-pointer px-1 hover:text-teal-600">
+                    <FaSort />
+                  </div>
+                </div> */}
               </h6>
             );
           })}

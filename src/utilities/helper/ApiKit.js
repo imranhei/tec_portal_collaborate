@@ -39,6 +39,11 @@ const ApiKit = {
     deleteUser: (alias) => HttpKit.delete(`users/${alias}`),
     postUser: (payload) => HttpKit.post("users", payload),
   },
+  supervisors: {
+    getSupervisors: (params) => HttpKit.get("supervisors", { params }),
+    postAssignSupervisor: (payload) =>
+      HttpKit.post("electrician-supervisors", payload),
+  },
 };
 
 export default ApiKit;
